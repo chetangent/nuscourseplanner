@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NUS Course Planner</title>
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">NUS degree planning</p>
+          <h1>NUS Course Planner</h1>
+          <p class="hero-copy">
+            Plan all 8 semesters, toggle S/U decisions, track CAP and honours, and
+            pull live module data from NUSMods before you commit a module to a slot.
+          </p>
+        </div>
+        <div class="hero-actions">
+          <label class="field compact-field">
+            <span>Academic year</span>
+            <input id="academic-year" type="text" placeholder="2025-2026" />
+          </label>
+          <button id="refresh-catalog" class="btn btn-primary" type="button">
+            Refresh NUSMods catalog
+          </button>
+          <button id="reset-plan" class="btn btn-ghost" type="button">Reset plan</button>
+        </div>
+      </header>
+
+      <main class="app-grid">
+        <section class="panel summary-panel">
+          <div class="panel-header">
+            <div>
+              <p class="section-kicker">At a glance</p>
+              <h2>CAP + graduation progress</h2>
+            </div>
+            <p id="save-status" class="subtle-text">Plan saved locally in your browser.</p>
+          </div>
+          <div id="summary-cards" class="summary-cards"></div>
+          <div id="year-breakdown" class="year-breakdown"></div>
+        </section>
+
+        <section class="panel search-panel">
+          <div class="panel-header">
+            <div>
+              <p class="section-kicker">Module finder</p>
+              <h2>Search NUSMods and add modules</h2>
+            </div>
+          </div>
+
+          <div class="search-controls">
+            <label class="field">
+              <span>Search modules</span>
+              <input
+                id="module-search"
+                type="search"
+                placeholder="Try CS2103T, software engineering, GEA1000..."
+                autocomplete="off"
+              />
+            </label>
+            <label class="field">
+              <span>Add into semester</span>
+              <select id="target-semester"></select>
+            </label>
+          </div>
+
+          <div class="search-results-wrap">
+            <div id="catalog-status" class="banner banner-muted">
+              Load the catalog to start searching modules.
+            </div>
+            <div id="search-results" class="search-results"></div>
+          </div>
+
+          <div id="module-preview" class="module-preview empty-state">
+            Search for a module to inspect its CAP, S/U, prerequisite, and semester
+            availability details.
+          </div>
+        </section>
+
+        <section class="panel requirements-panel">
+          <div class="panel-header">
+            <div>
+              <p class="section-kicker">Degree audit</p>
+              <h2>Requirement buckets</h2>
+            </div>
+            <p class="subtle-text">
+              The defaults mirror your spreadsheet structure, but you can edit them.
+            </p>
+          </div>
+          <div id="requirements-editor" class="requirements-editor"></div>
+        </section>
+
+        <section class="panel semesters-panel">
+          <div class="panel-header">
+            <div>
+              <p class="section-kicker">8-semester plan</p>
+              <h2>Semester roadmap</h2>
+            </div>
+          </div>
+          <div id="semester-grid" class="semester-grid"></div>
+        </section>
+      </main>
+    </div>
+
+    <template id="semester-card-template">
+      <article class="semester-card">
+        <div class="semester-card-header">
+          <div>
+            <p class="semester-year"></p>
+            <h3 class="semester-name"></h3>
+          </div>
+          <div class="semester-cap"></div>
+        </div>
+        <div class="semester-meta"></div>
+        <div class="semester-table-wrap">
+          <table class="semester-table">
+            <thead>
+              <tr>
+                <th>Module</th>
+                <th>MC</th>
+                <th>Requirement</th>
+                <th>Grade</th>
+                <th>S/U</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody class="semester-rows"></tbody>
+          </table>
+        </div>
+        <button class="btn btn-secondary add-manual" type="button">Add custom module</button>
+      </article>
+    </template>
+
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>

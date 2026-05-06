@@ -1,0 +1,533 @@
+:root {
+  --bg: #f3efe5;
+  --paper: rgba(255, 252, 246, 0.92);
+  --paper-strong: #fffdf8;
+  --ink: #14231f;
+  --muted: #60716b;
+  --line: rgba(20, 35, 31, 0.12);
+  --line-strong: rgba(20, 35, 31, 0.22);
+  --brand: #134e4a;
+  --brand-soft: #d4f2e6;
+  --accent: #c26435;
+  --warning: #8f4f1f;
+  --danger: #9f2a2a;
+  --success: #1f6d52;
+  --shadow: 0 18px 45px rgba(20, 35, 31, 0.08);
+  --radius-xl: 28px;
+  --radius-lg: 18px;
+  --radius-md: 12px;
+  --radius-sm: 10px;
+  --font-display: "Iowan Old Style", "Palatino Linotype", serif;
+  --font-body: "Avenir Next", "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--ink);
+  background:
+    radial-gradient(circle at top left, rgba(194, 100, 53, 0.15), transparent 32%),
+    radial-gradient(circle at top right, rgba(19, 78, 74, 0.22), transparent 28%),
+    linear-gradient(180deg, #f5f1e8 0%, #ebe3d6 100%);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+.page-shell {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 28px 20px 48px;
+}
+
+.hero {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-end;
+  margin-bottom: 24px;
+  padding: 28px;
+  border-radius: var(--radius-xl);
+  background:
+    linear-gradient(140deg, rgba(255, 251, 245, 0.96), rgba(238, 247, 243, 0.94)),
+    var(--paper);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: var(--shadow);
+}
+
+.eyebrow,
+.section-kicker,
+.semester-year,
+.preview-code {
+  margin: 0;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+
+.hero h1,
+.panel-header h2,
+.semester-card h3,
+.module-preview h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+.hero h1 {
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  line-height: 0.95;
+  margin-top: 8px;
+}
+
+.hero-copy {
+  max-width: 720px;
+  margin: 14px 0 0;
+  color: var(--muted);
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+.hero-actions {
+  min-width: min(360px, 100%);
+  display: grid;
+  gap: 12px;
+}
+
+.app-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.95fr;
+  gap: 20px;
+}
+
+.panel {
+  background: var(--paper);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: var(--shadow);
+  border-radius: 24px;
+  padding: 22px;
+}
+
+.summary-panel,
+.semesters-panel {
+  grid-column: 1 / -1;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.panel-header h2 {
+  font-size: 1.5rem;
+}
+
+.subtle-text {
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.summary-card,
+.year-chip,
+.preview-card,
+.requirement-card,
+.semester-card {
+  background: var(--paper-strong);
+  border: 1px solid var(--line);
+}
+
+.summary-card {
+  padding: 16px;
+  border-radius: var(--radius-lg);
+}
+
+.summary-card p,
+.preview-card p,
+.requirement-meta,
+.semester-meta,
+.search-result small,
+.module-title-cell span,
+.summary-card span {
+  color: var(--muted);
+}
+
+.summary-card h3 {
+  margin: 8px 0 4px;
+  font-size: 2rem;
+}
+
+.year-breakdown {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.year-chip {
+  border-radius: var(--radius-md);
+  padding: 14px;
+  display: grid;
+  gap: 4px;
+}
+
+.year-chip p,
+.preview-card p {
+  margin: 0;
+}
+
+.field,
+.search-controls,
+.field-row,
+.requirement-row {
+  display: grid;
+  gap: 8px;
+}
+
+.search-controls,
+.field-row,
+.requirement-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.field span {
+  font-size: 0.84rem;
+  color: var(--muted);
+}
+
+.field input,
+.field select,
+.table-input {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--line-strong);
+  background: #fffdf8;
+  color: var(--ink);
+  padding: 12px 14px;
+}
+
+.compact-field input {
+  min-height: 48px;
+}
+
+.small-field {
+  max-width: 140px;
+}
+
+.btn,
+.search-result,
+.icon-button {
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: transform 150ms ease, opacity 150ms ease, background 150ms ease;
+}
+
+.btn:hover,
+.search-result:hover,
+.icon-button:hover {
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background: var(--brand);
+  color: white;
+}
+
+.btn-secondary {
+  background: rgba(19, 78, 74, 0.1);
+  color: var(--brand);
+}
+
+.btn-ghost {
+  background: rgba(20, 35, 31, 0.08);
+  color: var(--ink);
+}
+
+.search-results-wrap {
+  margin-top: 18px;
+}
+
+.banner {
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  font-size: 0.94rem;
+}
+
+.banner-muted {
+  background: rgba(20, 35, 31, 0.07);
+  color: var(--ink);
+}
+
+.banner-success {
+  background: rgba(31, 109, 82, 0.12);
+  color: var(--success);
+}
+
+.banner-danger {
+  background: rgba(159, 42, 42, 0.12);
+  color: var(--danger);
+}
+
+.banner-warning {
+  background: rgba(143, 79, 31, 0.14);
+  color: var(--warning);
+}
+
+.search-results {
+  display: grid;
+  gap: 10px;
+  max-height: 360px;
+  overflow: auto;
+}
+
+.search-result {
+  text-align: left;
+  background: var(--paper-strong);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  display: grid;
+  gap: 4px;
+}
+
+.module-preview {
+  margin-top: 16px;
+  border-radius: 20px;
+  padding: 18px;
+  background: linear-gradient(180deg, rgba(19, 78, 74, 0.06), rgba(255, 253, 248, 0.78));
+  border: 1px solid var(--line);
+}
+
+.empty-state,
+.small-empty,
+.empty-row {
+  color: var(--muted);
+}
+
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.preview-card,
+.requirement-card {
+  padding: 14px;
+  border-radius: var(--radius-md);
+}
+
+.preview-card strong {
+  display: block;
+  margin: 6px 0;
+}
+
+.preview-description {
+  margin-top: 16px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.credit-pill,
+.badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.credit-pill,
+.badge.muted {
+  background: rgba(20, 35, 31, 0.08);
+}
+
+.badge.success {
+  background: rgba(31, 109, 82, 0.14);
+  color: var(--success);
+}
+
+.badge.warning {
+  background: rgba(143, 79, 31, 0.14);
+  color: var(--warning);
+}
+
+.badge.danger {
+  background: rgba(159, 42, 42, 0.14);
+  color: var(--danger);
+}
+
+.progress-strip {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(20, 35, 31, 0.08);
+  overflow: hidden;
+  margin: 12px 0 10px;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--brand));
+}
+
+.requirement-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.9rem;
+}
+
+.semester-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.semester-card {
+  border-radius: 22px;
+  padding: 16px;
+}
+
+.semester-card-header,
+.semester-meta,
+.badge-row,
+.su-toggle {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.semester-cap {
+  display: grid;
+  gap: 4px;
+  text-align: right;
+  color: var(--brand);
+  font-weight: 700;
+}
+
+.semester-meta {
+  margin: 12px 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.semester-table-wrap {
+  overflow: auto;
+  margin-bottom: 12px;
+}
+
+.semester-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.semester-table th,
+.semester-table td {
+  padding: 12px 8px;
+  border-top: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.semester-table th {
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.module-title-cell {
+  display: grid;
+  gap: 4px;
+  min-width: 260px;
+}
+
+.badge-row {
+  flex-wrap: wrap;
+}
+
+.short-input {
+  min-width: 72px;
+}
+
+.icon-button {
+  background: rgba(159, 42, 42, 0.1);
+  color: var(--danger);
+  padding: 10px 12px;
+}
+
+.su-toggle {
+  align-items: center;
+}
+
+.su-toggle input {
+  margin: 0;
+}
+
+@media (max-width: 1100px) {
+  .app-grid,
+  .summary-cards,
+  .year-breakdown,
+  .preview-grid,
+  .semester-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero,
+  .panel-header,
+  .preview-header,
+  .semester-card-header,
+  .semester-meta,
+  .requirement-meta,
+  .badge-row {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 720px) {
+  .page-shell {
+    padding: 14px 12px 24px;
+  }
+
+  .hero,
+  .panel,
+  .semester-card {
+    padding: 16px;
+  }
+
+  .search-controls,
+  .field-row,
+  .requirement-row {
+    grid-template-columns: 1fr;
+  }
+}
