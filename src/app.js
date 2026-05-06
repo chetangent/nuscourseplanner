@@ -1,8 +1,12 @@
 import {
   createEmptyPlan,
+  EXTRA_TERM_LOCATIONS,
+  EXTRA_TERM_TYPES,
   GRADE_OPTIONS,
   STORAGE_KEY,
-  formatSemesterNumber,
+  getAcademicYearOptions,
+  getOrderedSemesters,
+  normalizeAcademicYear,
   guessRequirementId,
 } from "./data.js";
 import {
@@ -26,7 +30,7 @@ const state = {
   catalogLoadedFor: null,
   catalogLoading: false,
   searchQuery: "",
-  targetSemesterIndex: 0,
+  targetSemesterId: "",
   selectedModuleCatalogEntry: null,
   selectedModuleDetails: null,
 };
@@ -46,17 +50,17 @@ const modulePreview = document.querySelector("#module-preview");
 const saveStatus = document.querySelector("#save-status");
 const semesterTemplate = document.querySelector("#semester-card-template");
 const suBudgetInput = document.querySelector("#su-budget");
+const extraTermQuickAdd = document.querySelector("#extra-term-quick-add");
 
 let searchDebounce = null;
 
 boot();
 
 function boot() {
+  state.plan.academicYear = normalizeAcademicYear(state.plan.academicYear);
   state.analytics = calculatePlan(state.plan);
-  academicYearInput.value = state.plan.academicYear;
+  renderAcademicYearOptions();
   suBudgetInput.value = state.plan.suBudgetMc ?? 32;
-  renderTargetSemesterOptions();
-
   bindEvents();
   render();
   if (state.plan.academicYear) {
@@ -73,16 +77,14 @@ function bindEvents() {
     render();
   });
   academicYearInput.addEventListener("change", () => {
-    state.plan.academicYear = academicYearInput.value.trim();
+    state.plan.academicYear = normalizeAcademicYear(academicYearInput.value);
     state.catalog = [];
     state.catalogLoadedFor = null;
     state.selectedModuleCatalogEntry = null;
     state.selectedModuleDetails = null;
     savePlan();
     render();
-    if (state.plan.academicYear) {
-      loadCatalog(false);
-    }
+    loadCatalog(false);
   });
 
   moduleSearchInput.addEventListener("input", () => {
@@ -100,7 +102,7 @@ function bindEvents() {
   });
 
   targetSemesterSelect.addEventListener("change", () => {
-    state.targetSemesterIndex = Number(targetSemesterSelect.value);
+    state.targetSemesterId = targetSemesterSelect.value;
     renderModulePreview();
   });
 }
@@ -108,7 +110,7 @@ function bindEvents() {
 async function loadCatalog(forceReload) {
   const academicYear = academicYearInput.value.trim();
   if (!academicYear) {
-    setCatalogBanner("Add an academic year like 2025-2026 first.", "warning");
+    setCatalogBanner("Add an academic year first.", "warning");
     return;
   }
   if (!forceReload && state.catalogLoadedFor === academicYear && state.catalog.length) {
@@ -154,62 +156,66 @@ async function selectCatalogEntry(moduleCode) {
 
 function render() {
   state.analytics = calculatePlan(state.plan);
+  renderAcademicYearOptions();
   renderTargetSemesterOptions();
   renderSummary();
+  renderExtraTermQuickAdd();
   renderRequirements();
   renderSemesters();
   renderSearchResults();
   renderModulePreview();
 }
 
-function renderTargetSemesterOptions() {
-  const semesters = Array.isArray(state.plan.semesters) ? state.plan.semesters : [];
-  targetSemesterSelect.innerHTML = semesters
+function renderAcademicYearOptions() {
+  state.plan.academicYear = normalizeAcademicYear(state.plan.academicYear);
+  const options = getAcademicYearOptions(state.plan.academicYear);
+  academicYearInput.innerHTML = options
     .map(
-      (semester, index) =>
-        `<option value="${index}">${escapeHtml(semester.year || `Year ${index + 1}`)} ${escapeHtml(semester.semester || `Semester ${index + 1}`)}</option>`,
+      (academicYear) =>
+        `<option value="${academicYear}" ${academicYear === state.plan.academicYear ? "selected" : ""}>${academicYear}</option>`,
+    )
+    .join("");
+  academicYearInput.value = state.plan.academicYear;
+}
+
+function renderTargetSemesterOptions() {
+  const orderedSemesters = state.analytics.orderedSemesters;
+  targetSemesterSelect.innerHTML = orderedSemesters
+    .map(
+      (semester) =>
+        `<option value="${semester.id}">${escapeHtml(semester.year)} ${escapeHtml(semester.semester)}</option>`,
     )
     .join("");
 
-  if (!semesters.length) {
-    state.targetSemesterIndex = 0;
-    return;
+  const availableIds = new Set(orderedSemesters.map((semester) => semester.id));
+  if (!availableIds.has(state.targetSemesterId)) {
+    state.targetSemesterId = orderedSemesters[0]?.id ?? "";
   }
-
-  if (!Number.isInteger(state.targetSemesterIndex) || state.targetSemesterIndex < 0 || state.targetSemesterIndex >= semesters.length) {
-    state.targetSemesterIndex = 0;
-  }
-
-  targetSemesterSelect.value = String(state.targetSemesterIndex);
+  targetSemesterSelect.value = state.targetSemesterId;
 }
 
 function renderSummary() {
   const analytics = state.analytics;
   const cards = [
     {
-      label: "Post-S/U CAP",
+      label: "Current CAP",
       value: formatCap(analytics.overallPostSuCap),
       note: analytics.honoursClassification,
     },
     {
-      label: "Pre-S/U CAP",
-      value: formatCap(analytics.overallPreSuCap),
-      note: `${analytics.gradedMc} graded MC counted`,
-    },
-    {
-      label: "Progress",
+      label: "Degree progress",
       value: `${analytics.totalMc} / 160 MC`,
       note: `${analytics.remainingMc} MC left`,
     },
     {
-      label: "Honours track",
-      value: analytics.honoursClassification,
-      note: `Post-S/U CAP ${formatCap(analytics.overallPostSuCap)}`,
+      label: "S/U left",
+      value: `${analytics.suRemainingMc} MC`,
+      note: `${analytics.suUsedMc} MC used`,
     },
     {
-      label: "S/U balance",
-      value: `${analytics.suRemainingMc} MC left`,
-      note: `${analytics.suUsedMc} MC used from ${analytics.suBudgetMc} MC budget`,
+      label: "Graded MCs",
+      value: `${analytics.gradedMc} MC`,
+      note: `Pre-S/U CAP ${formatCap(analytics.overallPreSuCap)}`,
     },
   ];
 
@@ -241,38 +247,73 @@ function renderSummary() {
     .join("");
 }
 
+function renderExtraTermQuickAdd() {
+  extraTermQuickAdd.innerHTML = EXTRA_TERM_LOCATIONS.map((location) => {
+    const existingExtras = state.plan.semesters.filter(
+      (semester) => !semester.isCore && semester.year === location.year,
+    );
+    return `
+      <article class="quick-add-card">
+        <div>
+          <strong>${escapeHtml(location.label)}</strong>
+          <span>${existingExtras.length} optional term${existingExtras.length === 1 ? "" : "s"} added</span>
+        </div>
+        <div class="quick-add-actions">
+          ${EXTRA_TERM_TYPES.map(
+            (termType) =>
+              `<button class="chip-button" type="button" data-quick-term="${location.id}|${termType.id}">+ ${escapeHtml(termType.label)}</button>`,
+          ).join("")}
+        </div>
+      </article>
+    `;
+  }).join("");
+
+  extraTermQuickAdd.querySelectorAll("[data-quick-term]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      const [locationId, termTypeId] = event.currentTarget.dataset.quickTerm.split("|");
+      addExtraTerm(locationId, termTypeId);
+    });
+  });
+}
+
 function renderRequirements() {
   requirementsEditor.innerHTML = state.analytics.requirementProgress
     .map(
       (requirement, index) => `
-        <article class="requirement-card">
-          <div class="requirement-row">
-            <label class="field">
-              <span>Name</span>
-              <input
-                type="text"
-                data-requirement-name="${index}"
-                value="${escapeHtml(requirement.name)}"
-              />
-            </label>
-            <label class="field small-field">
-              <span>Required MC</span>
-              <input
-                type="number"
-                min="0"
-                step="1"
-                data-requirement-mc="${index}"
-                value="${requirement.requiredMc}"
-              />
-            </label>
+        <article class="requirement-card minimal-card">
+          <div class="requirement-topline">
+            <div>
+              <strong>${escapeHtml(requirement.name)}</strong>
+              <p>${requirement.completedMc} / ${requirement.requiredMc} MC</p>
+            </div>
+            <span>${requirement.remainingMc} MC left</span>
           </div>
           <div class="progress-strip">
             <div class="progress-fill" style="width: ${requirement.percentage}%"></div>
           </div>
-          <div class="requirement-meta">
-            <span>${requirement.completedMc} MC mapped</span>
-            <span>${requirement.remainingMc} MC remaining</span>
-          </div>
+          <details class="requirement-editor-toggle">
+            <summary>Edit bucket</summary>
+            <div class="requirement-row">
+              <label class="field">
+                <span>Name</span>
+                <input
+                  type="text"
+                  data-requirement-name="${index}"
+                  value="${escapeHtml(requirement.name)}"
+                />
+              </label>
+              <label class="field small-field">
+                <span>Required MC</span>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  data-requirement-mc="${index}"
+                  value="${requirement.requiredMc}"
+                />
+              </label>
+            </div>
+          </details>
         </article>
       `,
     )
@@ -300,44 +341,76 @@ function renderRequirements() {
 function renderSemesters() {
   semesterGrid.innerHTML = "";
 
-  state.plan.semesters.forEach((semester, semesterIndex) => {
-    const card = semesterTemplate.content.firstElementChild.cloneNode(true);
-    const result = state.analytics.semesterResults[semesterIndex];
-    card.querySelector(".semester-year").textContent = semester.year;
-    card.querySelector(".semester-name").textContent = semester.semester;
-    card.querySelector(
-      ".semester-cap",
-    ).innerHTML = `<span>Pre ${formatCap(result.preSuCap)}</span><span>Post ${formatCap(
-      result.postSuCap,
-    )}</span>`;
-    card.querySelector(
-      ".semester-meta",
-    ).innerHTML = `<span>${formatMc(result.totalMc)}</span><span>${result.modules.length} modules</span><span>${result.postSuMc} post-S/U MC counted</span>`;
+  const groups = [];
+  state.analytics.orderedSemesters.forEach((semester, semesterIndex) => {
+    let group = groups.find((item) => item.year === semester.year);
+    if (!group) {
+      group = { year: semester.year, semesters: [] };
+      groups.push(group);
+    }
+    group.semesters.push({ semester, semesterIndex });
+  });
 
-    const rows = card.querySelector(".semester-rows");
-    rows.innerHTML = result.modules.length
-      ? result.modules
-          .map((module) => createModuleRowMarkup(module, semesterIndex))
-          .join("")
-      : `<tr><td colspan="6" class="empty-row">No modules added yet.</td></tr>`;
+  groups.forEach((group) => {
+    const section = document.createElement("section");
+    section.className = "year-section";
+    section.innerHTML = `
+      <div class="year-section-header">
+        <div>
+          <p class="section-kicker">Study block</p>
+          <h3>${escapeHtml(group.year)}</h3>
+        </div>
+      </div>
+      <div class="year-section-grid"></div>
+    `;
 
-    wireSemesterRows(card, semesterIndex);
+    const grid = section.querySelector(".year-section-grid");
 
-    card.querySelector(".add-manual").addEventListener("click", () => {
-      addManualModule(semesterIndex);
+    group.semesters.forEach(({ semester, semesterIndex }) => {
+      const card = semesterTemplate.content.firstElementChild.cloneNode(true);
+      const result = state.analytics.semesterResults[semesterIndex];
+      card.querySelector(".semester-year").textContent = semester.isCore ? group.year : "Optional term";
+      card.querySelector(".semester-name").textContent = semester.semester;
+      card.querySelector(
+        ".semester-cap",
+      ).innerHTML = `<span>CAP ${formatCap(result.postSuCap)}</span><span class="muted-cap">Pre ${formatCap(result.preSuCap)}</span>`;
+      card.querySelector(
+        ".semester-meta",
+      ).innerHTML = `<span>${formatMc(result.totalMc)}</span><span>${result.modules.length} module${result.modules.length === 1 ? "" : "s"}</span><span>${result.postSuMc} counted MC</span>`;
+      if (!semester.isCore) {
+        card.classList.add("optional-semester-card");
+        const removeButton = document.createElement("button");
+        removeButton.type = "button";
+        removeButton.className = "icon-button";
+        removeButton.textContent = "Remove term";
+        removeButton.addEventListener("click", () => removeExtraTerm(semester.id));
+        card.querySelector(".semester-card-header").append(removeButton);
+      }
+
+      const rows = card.querySelector(".semester-rows");
+      rows.innerHTML = result.modules.length
+        ? result.modules.map((module) => createModuleRowMarkup(module, semesterIndex)).join("")
+        : `<tr><td colspan="6" class="empty-row">No modules added yet.</td></tr>`;
+
+      wireSemesterRows(card, semesterIndex);
+
+      card.querySelector(".add-manual").addEventListener("click", () => {
+        addManualModule(semester.id);
+      });
+
+      grid.append(card);
     });
 
-    semesterGrid.append(card);
+    semesterGrid.append(section);
   });
 }
 
 function createModuleRowMarkup(module, semesterIndex) {
+  const semester = state.analytics.orderedSemesters[semesterIndex];
   const requirementOptions = state.plan.requirements
     .map(
       (requirement) => `
-        <option value="${requirement.id}" ${
-          requirement.id === module.requirementId ? "selected" : ""
-        }>
+        <option value="${requirement.id}" ${requirement.id === module.requirementId ? "selected" : ""}>
           ${escapeHtml(requirement.name)}
         </option>
       `,
@@ -346,12 +419,15 @@ function createModuleRowMarkup(module, semesterIndex) {
 
   const gradeOptions = GRADE_OPTIONS.map(
     (grade) =>
-      `<option value="${grade}" ${grade === module.grade ? "selected" : ""}>${
-        grade || "Ungraded"
-      }</option>`,
+      `<option value="${grade}" ${grade === module.grade ? "selected" : ""}>${grade || "Ungraded"}</option>`,
   ).join("");
 
-  const semesterResult = evaluateModule(module, state.plan.semesters, semesterIndex);
+  const semesterResult = evaluateModule(
+    { ...module, targetTermNumber: semester.termNumber ?? null },
+    state.analytics.orderedSemesters,
+    semesterIndex,
+    semester.termNumber ?? null,
+  );
   const availabilityClass =
     semesterResult.availability.offered === false
       ? "badge danger"
@@ -380,28 +456,17 @@ function createModuleRowMarkup(module, semesterIndex) {
             class="table-input"
             type="text"
             data-module-title="${module.id}"
-            value="${escapeHtml(module.title || "")}"
+            value="${escapeHtml(module.title || "")}" 
             placeholder="Module title"
           />
           <div class="badge-row">
-            <span class="${availabilityClass}">${escapeHtml(
-              semesterResult.availability.message,
-            )}</span>
-            <span class="${prerequisiteClass}">${escapeHtml(
-              semesterResult.prerequisiteCheck.summary,
-            )}</span>
+            <span class="${availabilityClass}">${escapeHtml(semesterResult.availability.message)}</span>
+            <span class="${prerequisiteClass}">${escapeHtml(semesterResult.prerequisiteCheck.summary)}</span>
           </div>
         </div>
       </td>
       <td>
-        <input
-          class="table-input short-input"
-          type="number"
-          min="0"
-          step="1"
-          data-module-credit="${module.id}"
-          value="${module.moduleCredit}"
-        />
+        <input class="table-input short-input" type="number" min="0" step="1" data-module-credit="${module.id}" value="${module.moduleCredit}" />
       </td>
       <td>
         <select class="table-input" data-module-requirement="${module.id}">
@@ -415,19 +480,12 @@ function createModuleRowMarkup(module, semesterIndex) {
       </td>
       <td>
         <label class="su-toggle">
-          <input
-            type="checkbox"
-            data-module-su="${module.id}"
-            ${module.useSu ? "checked" : ""}
-            ${module.suEligible ? "" : "disabled"}
-          />
+          <input type="checkbox" data-module-su="${module.id}" ${module.useSu ? "checked" : ""} ${module.suEligible ? "" : "disabled"} />
           <span>${module.suEligible ? "Use S/U" : "Not S/U-able"}</span>
         </label>
       </td>
       <td>
-        <button class="icon-button" type="button" data-module-remove="${module.id}">
-          Remove
-        </button>
+        <button class="icon-button" type="button" data-module-remove="${module.id}">Remove</button>
       </td>
     </tr>
   `;
@@ -562,17 +620,22 @@ function renderModulePreview(message) {
     state.selectedModuleCatalogEntry,
     requirementId,
   );
+  const targetSemester = state.analytics.orderedSemesters.find(
+    (semester) => semester.id === state.targetSemesterId,
+  );
+  const targetIndex = state.analytics.orderedSemesters.findIndex(
+    (semester) => semester.id === state.targetSemesterId,
+  );
   const evaluation = evaluateModule(
-    draftModule,
-    state.plan.semesters,
-    state.targetSemesterIndex,
+    { ...draftModule, targetTermNumber: targetSemester?.termNumber ?? null },
+    state.analytics.orderedSemesters,
+    targetIndex,
+    targetSemester?.termNumber ?? null,
   );
   const requirementOptions = state.plan.requirements
     .map(
       (requirement) => `
-        <option value="${requirement.id}" ${
-          requirement.id === requirementId ? "selected" : ""
-        }>
+        <option value="${requirement.id}" ${requirement.id === requirementId ? "selected" : ""}>
           ${escapeHtml(requirement.name)}
         </option>
       `,
@@ -592,9 +655,7 @@ function renderModulePreview(message) {
       <article class="preview-card">
         <p>Availability</p>
         <strong>${escapeHtml(evaluation.availability.message)}</strong>
-        <span>Offered terms: ${escapeHtml(
-          formatOfferedSemesters(draftModule.offeredSemesters) || "Unknown",
-        )}</span>
+        <span>Offered terms: ${escapeHtml(formatOfferedSemesters(draftModule.offeredSemesters) || "Unknown")}</span>
       </article>
       <article class="preview-card">
         <p>S/U</p>
@@ -604,9 +665,7 @@ function renderModulePreview(message) {
       <article class="preview-card">
         <p>Prerequisites</p>
         <strong>${escapeHtml(evaluation.prerequisiteCheck.summary)}</strong>
-        <span>${escapeHtml(
-          state.selectedModuleDetails.prerequisite || "No prerequisite text listed",
-        )}</span>
+        <span>${escapeHtml(state.selectedModuleDetails.prerequisite || "No prerequisite text listed")}</span>
       </article>
     </div>
     <div class="field-row">
@@ -615,9 +674,7 @@ function renderModulePreview(message) {
         <select id="preview-requirement">${requirementOptions}</select>
       </label>
       <button id="add-selected-module" class="btn btn-primary" type="button">
-        Add to ${escapeHtml(state.plan.semesters[state.targetSemesterIndex].year)} ${escapeHtml(
-          state.plan.semesters[state.targetSemesterIndex].semester,
-        )}
+        Add to ${escapeHtml(targetSemester?.year ?? "")} ${escapeHtml(targetSemester?.semester ?? "")}
       </button>
     </div>
     <div class="preview-description">
@@ -635,21 +692,29 @@ function addSelectedModule(requirementId) {
   if (!state.selectedModuleCatalogEntry || !state.selectedModuleDetails) {
     return;
   }
+  const targetSemester = state.plan.semesters.find((semester) => semester.id === state.targetSemesterId);
+  if (!targetSemester) {
+    return;
+  }
 
   const newModule = normalizeModuleForPlan(
     state.selectedModuleDetails,
     state.selectedModuleCatalogEntry,
     requirementId,
   );
-
-  state.plan.semesters[state.targetSemesterIndex].modules.push(newModule);
+  newModule.targetTermNumber = targetSemester.termNumber ?? null;
+  targetSemester.modules.push(newModule);
   savePlan();
   render();
-  saveStatus.textContent = `${newModule.moduleCode} added to ${state.plan.semesters[state.targetSemesterIndex].year} ${state.plan.semesters[state.targetSemesterIndex].semester}.`;
+  saveStatus.textContent = `${newModule.moduleCode} added to ${targetSemester.year} ${targetSemester.semester}.`;
 }
 
-function addManualModule(semesterIndex) {
-  state.plan.semesters[semesterIndex].modules.push({
+function addManualModule(semesterId) {
+  const semester = state.plan.semesters.find((item) => item.id === semesterId);
+  if (!semester) {
+    return;
+  }
+  semester.modules.push({
     id: crypto.randomUUID(),
     moduleCode: "",
     title: "Custom module",
@@ -660,7 +725,8 @@ function addManualModule(semesterIndex) {
     requirementId: "custom",
     prerequisite: "",
     prerequisiteRule: "",
-    offeredSemesters: [(semesterIndex % 2) + 1],
+    offeredSemesters: semester.termNumber ? [semester.termNumber] : [],
+    targetTermNumber: semester.termNumber ?? null,
     semesterData: [],
     sourceAcademicYear: state.plan.academicYear,
   });
@@ -669,7 +735,10 @@ function addManualModule(semesterIndex) {
 }
 
 function updateModule(semesterIndex, moduleId, updater) {
-  const module = state.plan.semesters[semesterIndex].modules.find((item) => item.id === moduleId);
+  const semesterId = state.analytics.orderedSemesters[semesterIndex]?.id;
+  const module = state.plan.semesters
+    .find((item) => item.id === semesterId)
+    ?.modules.find((item) => item.id === moduleId);
   if (!module) {
     return;
   }
@@ -679,9 +748,52 @@ function updateModule(semesterIndex, moduleId, updater) {
 }
 
 function removeModule(semesterIndex, moduleId) {
-  state.plan.semesters[semesterIndex].modules = state.plan.semesters[
-    semesterIndex
-  ].modules.filter((module) => module.id !== moduleId);
+  const semesterId = state.analytics.orderedSemesters[semesterIndex]?.id;
+  const semester = state.plan.semesters.find((item) => item.id === semesterId);
+  if (!semester) {
+    return;
+  }
+  semester.modules = semester.modules.filter((module) => module.id !== moduleId);
+  savePlan();
+  render();
+}
+
+function addExtraTerm(locationId, termTypeId) {
+  const location = EXTRA_TERM_LOCATIONS.find((item) => item.id === locationId);
+  const termType = EXTRA_TERM_TYPES.find((item) => item.id === termTypeId);
+  if (!location || !termType) {
+    return;
+  }
+  const siblingOrders = state.plan.semesters
+    .filter((semester) => !semester.isCore && semester.year === location.year)
+    .map((semester) => semester.order ?? 0);
+  const nextOffset = siblingOrders.length
+    ? Math.max(...siblingOrders) - location.baseOrder + 1
+    : 1;
+
+  state.plan.semesters.push({
+    id: crypto.randomUUID(),
+    year: location.year,
+    semester: termType.label,
+    order: location.baseOrder + nextOffset,
+    termNumber: termType.termNumber,
+    isCore: false,
+    modules: [],
+  });
+  savePlan();
+  render();
+}
+
+function removeExtraTerm(semesterId) {
+  const semester = state.plan.semesters.find((item) => item.id === semesterId);
+  if (!semester || semester.isCore) {
+    return;
+  }
+  const confirmed = window.confirm(`Remove ${semester.year} ${semester.semester}?`);
+  if (!confirmed) {
+    return;
+  }
+  state.plan.semesters = state.plan.semesters.filter((item) => item.id !== semesterId);
   savePlan();
   render();
 }
@@ -699,7 +811,6 @@ function handleResetPlan() {
   state.selectedModuleCatalogEntry = null;
   state.selectedModuleDetails = null;
   moduleSearchInput.value = "";
-  academicYearInput.value = state.plan.academicYear;
   suBudgetInput.value = state.plan.suBudgetMc ?? 32;
   savePlan();
   render();
@@ -720,15 +831,55 @@ function loadPlan() {
   try {
     const parsed = JSON.parse(raw);
     const fresh = createEmptyPlan();
+    const safeRequirements = Array.isArray(parsed.requirements)
+      ? parsed.requirements
+          .filter((item) => item && typeof item === "object")
+          .map((item, index) => ({
+            id: typeof item.id === "string" && item.id ? item.id : fresh.requirements[index]?.id ?? `custom-${index}`,
+            name: typeof item.name === "string" && item.name.trim() ? item.name : fresh.requirements[index]?.name ?? `Requirement ${index + 1}`,
+            requiredMc: Number.isFinite(Number(item.requiredMc)) ? Number(item.requiredMc) : fresh.requirements[index]?.requiredMc ?? 0,
+          }))
+      : fresh.requirements;
+
+    const safeSemesters = Array.isArray(parsed.semesters)
+      ? parsed.semesters
+          .filter((semester) => semester && typeof semester === "object")
+          .map((semester, index) => ({
+            id: typeof semester.id === "string" && semester.id ? semester.id : crypto.randomUUID(),
+            year: typeof semester.year === "string" && semester.year.trim() ? semester.year : fresh.semesters[index]?.year ?? `Year ${Math.floor(index / 2) + 1}`,
+            semester: typeof semester.semester === "string" && semester.semester.trim() ? semester.semester : fresh.semesters[index]?.semester ?? `Semester ${(index % 2) + 1}`,
+            order: typeof semester.order === "number" ? semester.order : fresh.semesters[index]?.order ?? (index + 1) * 10,
+            termNumber: semester.termNumber !== undefined && semester.termNumber !== null && Number.isFinite(Number(semester.termNumber)) ? Number(semester.termNumber) : fresh.semesters[index]?.termNumber ?? null,
+            isCore: typeof semester.isCore === "boolean" ? semester.isCore : index < 8,
+            modules: Array.isArray(semester.modules)
+              ? semester.modules
+                  .filter((module) => module && typeof module === "object")
+                  .map((module) => ({
+                    id: typeof module.id === "string" && module.id ? module.id : crypto.randomUUID(),
+                    moduleCode: typeof module.moduleCode === "string" ? module.moduleCode : "",
+                    title: typeof module.title === "string" ? module.title : "Custom module",
+                    moduleCredit: Number.isFinite(Number(module.moduleCredit)) ? Number(module.moduleCredit) : 0,
+                    grade: typeof module.grade === "string" ? module.grade : "",
+                    suEligible: Boolean(module.suEligible),
+                    useSu: Boolean(module.useSu),
+                    requirementId: typeof module.requirementId === "string" ? module.requirementId : "custom",
+                    prerequisite: typeof module.prerequisite === "string" ? module.prerequisite : "",
+                    prerequisiteRule: typeof module.prerequisiteRule === "string" ? module.prerequisiteRule : "",
+                    offeredSemesters: Array.isArray(module.offeredSemesters) ? module.offeredSemesters.filter((value) => Number.isFinite(Number(value))).map(Number) : [],
+                    targetTermNumber: module.targetTermNumber !== undefined && module.targetTermNumber !== null && Number.isFinite(Number(module.targetTermNumber)) ? Number(module.targetTermNumber) : null,
+                    semesterData: Array.isArray(module.semesterData) ? module.semesterData : [],
+                    sourceAcademicYear: typeof module.sourceAcademicYear === "string" ? module.sourceAcademicYear : null,
+                  }))
+              : [],
+          }))
+      : fresh.semesters;
+
     return {
       ...fresh,
-      ...parsed,
-      suBudgetMc:
-        typeof parsed.suBudgetMc === "number" ? parsed.suBudgetMc : fresh.suBudgetMc,
-      requirements: Array.isArray(parsed.requirements)
-        ? parsed.requirements
-        : fresh.requirements,
-      semesters: Array.isArray(parsed.semesters) ? parsed.semesters : fresh.semesters,
+      academicYear: normalizeAcademicYear(parsed.academicYear ?? fresh.academicYear),
+      suBudgetMc: Number.isFinite(Number(parsed.suBudgetMc)) ? Number(parsed.suBudgetMc) : fresh.suBudgetMc,
+      requirements: safeRequirements.length ? safeRequirements : fresh.requirements,
+      semesters: safeSemesters.length ? safeSemesters : fresh.semesters,
     };
   } catch {
     return createEmptyPlan();

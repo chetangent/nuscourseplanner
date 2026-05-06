@@ -17,19 +17,62 @@
             pull live module data from NUSMods before you commit a module to a slot.
           </p>
         </div>
-        <div class="hero-actions">
-          <label class="field compact-field">
-            <span>Academic year</span>
-            <input id="academic-year" type="text" placeholder="2025-2026" />
-          </label>
-          <button id="refresh-catalog" class="btn btn-primary" type="button">
-            Refresh NUSMods catalog
-          </button>
-          <button id="reset-plan" class="btn btn-ghost" type="button">Reset plan</button>
-        </div>
       </header>
 
       <main class="app-grid">
+        <section class="panel search-panel top-search-panel">
+          <div class="panel-header">
+            <div>
+              <p class="section-kicker">Module finder</p>
+              <h2>Load NUSMods and add modules</h2>
+            </div>
+            <p class="subtle-text">
+              Choose an academic year, search modules, inspect prerequisites and offering terms, then add to a target semester.
+            </p>
+          </div>
+
+          <div class="search-controls top-loader-controls">
+            <label class="field compact-field">
+              <span>Academic year</span>
+              <select id="academic-year"></select>
+            </label>
+            <div class="search-button-row">
+              <button id="refresh-catalog" class="btn btn-primary" type="button">
+                Refresh NUSMods catalog
+              </button>
+              <button id="reset-plan" class="btn btn-ghost" type="button">Reset plan</button>
+            </div>
+          </div>
+
+          <div class="field-row module-adder-row">
+            <label class="field">
+              <span>Search modules</span>
+              <input
+                id="module-search"
+                type="search"
+                placeholder="Try CS2103T, software engineering, GEA1000..."
+                autocomplete="off"
+              />
+            </label>
+            <label class="field">
+              <span>Add into semester</span>
+              <select id="target-semester"></select>
+            </label>
+          </div>
+
+          <div class="search-results-wrap">
+            <div id="catalog-status" class="banner banner-muted">
+              Load the catalog to start searching modules.
+            </div>
+            <div id="search-results" class="search-results"></div>
+          </div>
+
+          <div id="module-preview" class="module-preview empty-state">
+            Search for a module to inspect its CAP, S/U, prerequisite, and semester
+            availability details.
+          </div>
+        </section>
+
         <section class="panel summary-panel">
           <div class="panel-header">
             <div>
@@ -63,47 +106,17 @@
               <h2>Semester roadmap</h2>
             </div>
           </div>
+          <div class="optional-terms-panel">
+            <div class="optional-terms-copy">
+              <p class="section-kicker">Optional Terms</p>
+              <h3>Add special terms, internships, or pre-matric modules</h3>
+              <p class="subtle-text">
+                Your default 8 semesters stay clean. Add extras only if you actually need them.
+              </p>
+            </div>
+            <div id="extra-term-quick-add" class="quick-add-grid"></div>
+          </div>
           <div id="semester-grid" class="semester-grid"></div>
-        </section>
-
-        <section class="panel search-panel">
-          <div class="panel-header">
-            <div>
-              <p class="section-kicker">Module finder</p>
-              <h2>Add modules into your plan</h2>
-            </div>
-            <p class="subtle-text">
-              Search first, inspect prerequisites and offering terms, then add to a target semester.
-            </p>
-          </div>
-
-          <div class="search-controls">
-            <label class="field">
-              <span>Search modules</span>
-              <input
-                id="module-search"
-                type="search"
-                placeholder="Try CS2103T, software engineering, GEA1000..."
-                autocomplete="off"
-              />
-            </label>
-            <label class="field">
-              <span>Add into semester</span>
-              <select id="target-semester"></select>
-            </label>
-          </div>
-
-          <div class="search-results-wrap">
-            <div id="catalog-status" class="banner banner-muted">
-              Load the catalog to start searching modules.
-            </div>
-            <div id="search-results" class="search-results"></div>
-          </div>
-
-          <div id="module-preview" class="module-preview empty-state">
-            Search for a module to inspect its CAP, S/U, prerequisite, and semester
-            availability details.
-          </div>
         </section>
 
         <section class="panel requirements-panel">
@@ -118,7 +131,6 @@
           </div>
           <div id="requirements-editor" class="requirements-editor"></div>
         </section>
-
       </main>
     </div>
 

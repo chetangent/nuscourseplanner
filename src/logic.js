@@ -3,11 +3,9 @@ import {
   HONOURS_BANDS,
   TOTAL_REQUIRED_MC,
   DEFAULT_SU_BUDGET_MC,
+  formatSemesterNumber,
+  getOrderedSemesters,
 } from "./data.js";
-
-export function clonePlan(plan) {
-  return JSON.parse(JSON.stringify(plan));
-}
 
 export function formatCap(value) {
   if (!Number.isFinite(value)) {
@@ -36,27 +34,36 @@ export function getHonoursLabel(cap) {
 }
 
 export function calculatePlan(plan) {
-  const semesterResults = plan.semesters.map((semester, semesterIndex) =>
-    calculateSemester(semester, plan.requirements, plan.semesters, semesterIndex),
+  const orderedSemesters = getOrderedSemesters(plan.semesters);
+  const semesterResults = orderedSemesters.map((semester, semesterIndex) =>
+    calculateSemester(semester, plan.requirements, orderedSemesters, semesterIndex),
   );
 
-  const yearlyResults = [];
-  for (let yearIndex = 0; yearIndex < plan.semesters.length; yearIndex += 2) {
-    const semOne = semesterResults[yearIndex];
-    const semTwo = semesterResults[yearIndex + 1];
-    yearlyResults.push({
-      year: plan.semesters[yearIndex].year,
-      preSuCap: weightedAverage(
-        [semOne?.preSuGradePoints, semTwo?.preSuGradePoints],
-        [semOne?.gradedMc, semTwo?.gradedMc],
-      ),
-      postSuCap: weightedAverage(
-        [semOne?.postSuGradePoints, semTwo?.postSuGradePoints],
-        [semOne?.postSuMc, semTwo?.postSuMc],
-      ),
-      totalMc: (semOne?.totalMc ?? 0) + (semTwo?.totalMc ?? 0),
-    });
-  }
+  const yearlyMap = new Map();
+  orderedSemesters.forEach((semester, index) => {
+    const bucket = yearlyMap.get(semester.year) ?? {
+      year: semester.year,
+      gradedMc: 0,
+      postSuMc: 0,
+      preSuGradePoints: 0,
+      postSuGradePoints: 0,
+      totalMc: 0,
+    };
+    const result = semesterResults[index];
+    bucket.gradedMc += result.gradedMc;
+    bucket.postSuMc += result.postSuMc;
+    bucket.preSuGradePoints += result.preSuGradePoints;
+    bucket.postSuGradePoints += result.postSuGradePoints;
+    bucket.totalMc += result.totalMc;
+    yearlyMap.set(semester.year, bucket);
+  });
+
+  const yearlyResults = Array.from(yearlyMap.values()).map((bucket) => ({
+    year: bucket.year,
+    preSuCap: bucket.gradedMc > 0 ? bucket.preSuGradePoints / bucket.gradedMc : null,
+    postSuCap: bucket.postSuMc > 0 ? bucket.postSuGradePoints / bucket.postSuMc : null,
+    totalMc: bucket.totalMc,
+  }));
 
   const totalMc = semesterResults.reduce((sum, item) => sum + item.totalMc, 0);
   const gradedMc = semesterResults.reduce((sum, item) => sum + item.gradedMc, 0);
@@ -65,17 +72,11 @@ export function calculatePlan(plan) {
   const suBudgetMc = Number.isFinite(Number(plan.suBudgetMc))
     ? Number(plan.suBudgetMc)
     : DEFAULT_SU_BUDGET_MC;
-  const preSuGradePoints = semesterResults.reduce(
-    (sum, item) => sum + item.preSuGradePoints,
-    0,
-  );
-  const postSuGradePoints = semesterResults.reduce(
-    (sum, item) => sum + item.postSuGradePoints,
-    0,
-  );
+  const preSuGradePoints = semesterResults.reduce((sum, item) => sum + item.preSuGradePoints, 0);
+  const postSuGradePoints = semesterResults.reduce((sum, item) => sum + item.postSuGradePoints, 0);
 
   const requirementProgress = plan.requirements.map((requirement) => {
-    const completedMc = plan.semesters.reduce(
+    const completedMc = orderedSemesters.reduce(
       (sum, semester) =>
         sum +
         semester.modules
@@ -100,6 +101,7 @@ export function calculatePlan(plan) {
   const overallPostSuCap = postSuMc > 0 ? postSuGradePoints / postSuMc : null;
 
   return {
+    orderedSemesters,
     semesterResults,
     yearlyResults,
     requirementProgress,
@@ -118,14 +120,14 @@ export function calculatePlan(plan) {
   };
 }
 
-export function evaluateModule(module, allSemesters, semesterIndex) {
+export function evaluateModule(module, allSemesters, semesterIndex, termNumberOverride = null) {
   const numericGrade = getGradePoint(module.grade);
   const moduleCredit = toNumber(module.moduleCredit);
   const suApplied = Boolean(module.useSu) && Boolean(module.suEligible);
 
   const takenEarlier = getCompletedModuleCodesBefore(allSemesters, semesterIndex);
   const prerequisiteCheck = evaluatePrerequisites(module, takenEarlier);
-  const availability = getAvailabilityStatus(module, semesterIndex);
+  const availability = getAvailabilityStatus(module, termNumberOverride);
 
   return {
     numericGrade,
@@ -142,7 +144,12 @@ export function evaluateModule(module, allSemesters, semesterIndex) {
 
 function calculateSemester(semester, requirements, allSemesters, semesterIndex) {
   const modules = semester.modules.map((module) => {
-    const evaluation = evaluateModule(module, allSemesters, semesterIndex);
+    const evaluation = evaluateModule(
+      module,
+      allSemesters,
+      semesterIndex,
+      semester.termNumber ?? module.targetTermNumber ?? null,
+    );
     const requirementName =
       requirements.find((item) => item.id === module.requirementId)?.name ?? "Custom / Other";
     return {
@@ -170,12 +177,6 @@ function calculateSemester(semester, requirements, allSemesters, semesterIndex) 
   };
 }
 
-function weightedAverage(numerators, denominators) {
-  const numerator = numerators.reduce((sum, item) => sum + (item ?? 0), 0);
-  const denominator = denominators.reduce((sum, item) => sum + (item ?? 0), 0);
-  return denominator > 0 ? numerator / denominator : null;
-}
-
 function toNumber(value) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
@@ -193,9 +194,9 @@ export function getCompletedModuleCodesBefore(allSemesters, semesterIndex) {
   return codes;
 }
 
-function getAvailabilityStatus(module, semesterIndex) {
-  const semesterNumber = (semesterIndex % 2) + 1;
-  const offered = Array.isArray(module.offeredSemesters)
+function getAvailabilityStatus(module, termNumberOverride) {
+  const semesterNumber = termNumberOverride ?? module.targetTermNumber ?? module.termNumber ?? null;
+  const offered = Array.isArray(module.offeredSemesters) && semesterNumber
     ? module.offeredSemesters.includes(semesterNumber)
     : null;
 
@@ -379,4 +380,3 @@ function extractCourseCodes(text) {
     new Set((text.match(/[A-Z]{2,3}\d{4}[A-Z]{0,3}/g) || []).map((code) => code.toUpperCase())),
   );
 }
-import { formatSemesterNumber } from "./data.js";

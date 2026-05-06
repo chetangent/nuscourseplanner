@@ -96,12 +96,6 @@ select {
   font-size: 1rem;
 }
 
-.hero-actions {
-  min-width: min(360px, 100%);
-  display: grid;
-  gap: 12px;
-}
-
 .app-grid {
   display: grid;
   grid-template-columns: 1.05fr 0.95fr;
@@ -117,7 +111,8 @@ select {
 }
 
 .summary-panel,
-.semesters-panel {
+.semesters-panel,
+.top-search-panel {
   grid-column: 1 / -1;
 }
 
@@ -159,7 +154,7 @@ select {
 
 .summary-cards {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
   margin-bottom: 16px;
 }
@@ -192,6 +187,16 @@ select {
   margin: 8px 0 4px;
   font-size: 1.6rem;
   line-height: 1.2;
+}
+
+.summary-card:first-child {
+  background: linear-gradient(180deg, rgba(19, 78, 74, 0.95), rgba(16, 61, 57, 0.95));
+  color: white;
+}
+
+.summary-card:first-child p,
+.summary-card:first-child span {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .year-breakdown {
@@ -231,6 +236,20 @@ select {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.top-loader-controls {
+  align-items: end;
+}
+
+.search-button-row {
+  display: flex;
+  gap: 12px;
+  align-items: end;
+}
+
+.module-adder-row {
+  margin-top: 18px;
+}
+
 .field span {
   font-size: 0.84rem;
   color: var(--muted);
@@ -247,7 +266,8 @@ select {
   padding: 12px 14px;
 }
 
-.compact-field input {
+.compact-field input,
+.compact-field select {
   min-height: 48px;
 }
 
@@ -431,10 +451,40 @@ select {
   font-size: 0.9rem;
 }
 
+.minimal-card {
+  padding: 16px;
+}
+
+.requirement-topline {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.requirement-topline p {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+
+.requirement-topline span {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.requirement-editor-toggle {
+  margin-top: 12px;
+}
+
+.requirement-editor-toggle summary {
+  cursor: pointer;
+  color: var(--brand);
+  font-weight: 600;
+}
+
 .semester-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: 18px;
 }
 
 .semester-card {
@@ -526,7 +576,7 @@ select {
   .summary-cards,
   .year-breakdown,
   .preview-grid,
-  .semester-grid {
+  .year-section-grid {
     grid-template-columns: 1fr;
   }
 
@@ -535,6 +585,7 @@ select {
   .preview-header,
   .semester-card-header,
   .semester-meta,
+  .requirement-topline,
   .requirement-meta,
   .badge-row {
     flex-direction: column;
@@ -557,4 +608,98 @@ select {
   .requirement-row {
     grid-template-columns: 1fr;
   }
+}
+
+.optional-terms-panel {
+  margin-bottom: 20px;
+  padding: 22px;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top right, rgba(19, 78, 74, 0.12), transparent 32%),
+    linear-gradient(180deg, rgba(19, 78, 74, 0.06), rgba(255, 252, 246, 0.98));
+  border: 1px solid rgba(19, 78, 74, 0.12);
+}
+
+.optional-terms-copy h3 {
+  margin: 6px 0 8px;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+}
+
+.quick-add-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.quick-add-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(255, 253, 248, 0.86);
+  border: 1px solid rgba(19, 78, 74, 0.1);
+  box-shadow: 0 10px 24px rgba(20, 35, 31, 0.05);
+}
+
+.quick-add-card span {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.quick-add-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.chip-button {
+  border: 1px solid rgba(19, 78, 74, 0.18);
+  background: white;
+  color: var(--brand);
+  border-radius: 999px;
+  padding: 9px 12px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.chip-button:hover {
+  background: rgba(19, 78, 74, 0.08);
+}
+
+.optional-semester-card {
+  border-style: dashed;
+}
+
+.year-section {
+  display: grid;
+  gap: 12px;
+}
+
+.year-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  padding: 6px 2px 0;
+}
+
+.year-section-header h3 {
+  margin: 4px 0 0;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+}
+
+.year-section-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.muted-cap {
+  color: var(--muted);
+  font-weight: 500;
 }
