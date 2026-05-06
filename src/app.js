@@ -55,13 +55,7 @@ function boot() {
   state.analytics = calculatePlan(state.plan);
   academicYearInput.value = state.plan.academicYear;
   suBudgetInput.value = state.plan.suBudgetMc ?? 32;
-  targetSemesterSelect.innerHTML = state.plan.semesters
-    .map(
-      (semester, index) =>
-        `<option value="${index}">${semester.year} ${semester.semester}</option>`,
-    )
-    .join("");
-  targetSemesterSelect.value = String(state.targetSemesterIndex);
+  renderTargetSemesterOptions();
 
   bindEvents();
   render();
@@ -160,11 +154,33 @@ async function selectCatalogEntry(moduleCode) {
 
 function render() {
   state.analytics = calculatePlan(state.plan);
+  renderTargetSemesterOptions();
   renderSummary();
   renderRequirements();
   renderSemesters();
   renderSearchResults();
   renderModulePreview();
+}
+
+function renderTargetSemesterOptions() {
+  const semesters = Array.isArray(state.plan.semesters) ? state.plan.semesters : [];
+  targetSemesterSelect.innerHTML = semesters
+    .map(
+      (semester, index) =>
+        `<option value="${index}">${escapeHtml(semester.year || `Year ${index + 1}`)} ${escapeHtml(semester.semester || `Semester ${index + 1}`)}</option>`,
+    )
+    .join("");
+
+  if (!semesters.length) {
+    state.targetSemesterIndex = 0;
+    return;
+  }
+
+  if (!Number.isInteger(state.targetSemesterIndex) || state.targetSemesterIndex < 0 || state.targetSemesterIndex >= semesters.length) {
+    state.targetSemesterIndex = 0;
+  }
+
+  targetSemesterSelect.value = String(state.targetSemesterIndex);
 }
 
 function renderSummary() {
