@@ -63,6 +63,15 @@ export const SEMESTER_LABELS = [
 
 export const STORAGE_KEY = "nus-course-planner-state-v1";
 
+export const DEFAULT_SU_BUDGET_MC = 32;
+
+export const SEMESTER_NUMBER_LABELS = {
+  1: "Semester 1",
+  2: "Semester 2",
+  3: "Special Term 1",
+  4: "Special Term 2",
+};
+
 const FOUNDATION_CODES = new Set([
   "CS1010",
   "CS1010A",
@@ -89,6 +98,7 @@ const FOUNDATION_CODES = new Set([
 export function createEmptyPlan() {
   return {
     academicYear: getDefaultAcademicYear(),
+    suBudgetMc: DEFAULT_SU_BUDGET_MC,
     requirements: DEFAULT_REQUIREMENTS.map((item) => ({ ...item })),
     semesters: SEMESTER_LABELS.map((label, index) => ({
       id: `sem-${index + 1}`,
@@ -98,6 +108,10 @@ export function createEmptyPlan() {
       modules: [],
     })),
   };
+}
+
+export function formatSemesterNumber(semesterNumber) {
+  return SEMESTER_NUMBER_LABELS[semesterNumber] ?? `Semester ${semesterNumber}`;
 }
 
 export function getDefaultAcademicYear(date = new Date()) {

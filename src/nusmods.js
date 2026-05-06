@@ -41,6 +41,25 @@ export function searchCatalog(catalog, query, limit = 20) {
     .slice(0, limit);
 }
 
+export function formatOfferedSemesters(semesters = []) {
+  return semesters
+    .map((semester) => {
+      switch (semester) {
+        case 1:
+          return "Semester 1";
+        case 2:
+          return "Semester 2";
+        case 3:
+          return "Special Term 1";
+        case 4:
+          return "Special Term 2";
+        default:
+          return `Semester ${semester}`;
+      }
+    })
+    .join(", ");
+}
+
 export function normalizeModuleForPlan(details, fallbackCatalogEntry, requirementId) {
   return {
     id: crypto.randomUUID(),

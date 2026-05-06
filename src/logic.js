@@ -2,6 +2,7 @@ import {
   GRADE_POINTS,
   HONOURS_BANDS,
   TOTAL_REQUIRED_MC,
+  DEFAULT_SU_BUDGET_MC,
 } from "./data.js";
 
 export function clonePlan(plan) {
@@ -60,6 +61,10 @@ export function calculatePlan(plan) {
   const totalMc = semesterResults.reduce((sum, item) => sum + item.totalMc, 0);
   const gradedMc = semesterResults.reduce((sum, item) => sum + item.gradedMc, 0);
   const postSuMc = semesterResults.reduce((sum, item) => sum + item.postSuMc, 0);
+  const suUsedMc = Math.max(gradedMc - postSuMc, 0);
+  const suBudgetMc = Number.isFinite(Number(plan.suBudgetMc))
+    ? Number(plan.suBudgetMc)
+    : DEFAULT_SU_BUDGET_MC;
   const preSuGradePoints = semesterResults.reduce(
     (sum, item) => sum + item.preSuGradePoints,
     0,
@@ -102,6 +107,9 @@ export function calculatePlan(plan) {
     remainingMc: Math.max(TOTAL_REQUIRED_MC - totalMc, 0),
     gradedMc,
     postSuMc,
+    suUsedMc,
+    suBudgetMc,
+    suRemainingMc: Math.max(suBudgetMc - suUsedMc, 0),
     overallPreSuCap,
     overallPostSuCap,
     honoursClassification: getHonoursLabel(overallPostSuCap),
@@ -201,11 +209,11 @@ function getAvailabilityStatus(module, semesterIndex) {
   return offered
     ? {
         offered: true,
-        message: `Offered in Semester ${semesterNumber}`,
+        message: `Offered in ${formatSemesterNumber(semesterNumber)}`,
       }
     : {
         offered: false,
-        message: `Not listed for Semester ${semesterNumber}`,
+        message: `Not listed for ${formatSemesterNumber(semesterNumber)}`,
       };
 }
 
@@ -371,3 +379,4 @@ function extractCourseCodes(text) {
     new Set((text.match(/[A-Z]{2,3}\d{4}[A-Z]{0,3}/g) || []).map((code) => code.toUpperCase())),
   );
 }
+import { formatSemesterNumber } from "./data.js";

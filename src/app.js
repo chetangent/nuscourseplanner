@@ -2,6 +2,7 @@ import {
   createEmptyPlan,
   GRADE_OPTIONS,
   STORAGE_KEY,
+  formatSemesterNumber,
   guessRequirementId,
 } from "./data.js";
 import {
@@ -13,6 +14,7 @@ import {
 import {
   fetchModuleCatalog,
   fetchModuleDetails,
+  formatOfferedSemesters,
   normalizeModuleForPlan,
   searchCatalog,
 } from "./nusmods.js";
@@ -43,6 +45,7 @@ const searchResults = document.querySelector("#search-results");
 const modulePreview = document.querySelector("#module-preview");
 const saveStatus = document.querySelector("#save-status");
 const semesterTemplate = document.querySelector("#semester-card-template");
+const suBudgetInput = document.querySelector("#su-budget");
 
 let searchDebounce = null;
 
@@ -51,6 +54,7 @@ boot();
 function boot() {
   state.analytics = calculatePlan(state.plan);
   academicYearInput.value = state.plan.academicYear;
+  suBudgetInput.value = state.plan.suBudgetMc ?? 32;
   targetSemesterSelect.innerHTML = state.plan.semesters
     .map(
       (semester, index) =>
@@ -69,6 +73,11 @@ function boot() {
 function bindEvents() {
   refreshCatalogButton.addEventListener("click", () => loadCatalog(true));
   resetPlanButton.addEventListener("click", handleResetPlan);
+  suBudgetInput.addEventListener("change", () => {
+    state.plan.suBudgetMc = Number(suBudgetInput.value) || 0;
+    savePlan();
+    render();
+  });
   academicYearInput.addEventListener("change", () => {
     state.plan.academicYear = academicYearInput.value.trim();
     state.catalog = [];
@@ -177,9 +186,14 @@ function renderSummary() {
       note: `${analytics.remainingMc} MC left`,
     },
     {
-      label: "Post-S/U counted MC",
-      value: `${analytics.postSuMc} MC`,
-      note: "After excluding S/U-ed modules",
+      label: "Honours track",
+      value: analytics.honoursClassification,
+      note: `Post-S/U CAP ${formatCap(analytics.overallPostSuCap)}`,
+    },
+    {
+      label: "S/U balance",
+      value: `${analytics.suRemainingMc} MC left`,
+      note: `${analytics.suUsedMc} MC used from ${analytics.suBudgetMc} MC budget`,
     },
   ];
 
@@ -200,8 +214,10 @@ function renderSummary() {
       (year) => `
         <article class="year-chip">
           <p>${year.year}</p>
-          <strong>Pre: ${formatCap(year.preSuCap)}</strong>
-          <strong>Post: ${formatCap(year.postSuCap)}</strong>
+          <div class="year-chip-grid">
+            <strong>Pre-S/U ${formatCap(year.preSuCap)}</strong>
+            <strong>Post-S/U ${formatCap(year.postSuCap)}</strong>
+          </div>
           <span>${formatMc(year.totalMc)}</span>
         </article>
       `,
@@ -280,7 +296,7 @@ function renderSemesters() {
     )}</span>`;
     card.querySelector(
       ".semester-meta",
-    ).innerHTML = `<span>${formatMc(result.totalMc)}</span><span>${result.modules.length} modules</span>`;
+    ).innerHTML = `<span>${formatMc(result.totalMc)}</span><span>${result.modules.length} modules</span><span>${result.postSuMc} post-S/U MC counted</span>`;
 
     const rows = card.querySelector(".semester-rows");
     rows.innerHTML = result.modules.length
@@ -489,7 +505,7 @@ function renderSearchResults() {
         <button class="search-result" type="button" data-catalog-code="${item.moduleCode}">
           <strong>${escapeHtml(item.moduleCode)}</strong>
           <span>${escapeHtml(item.title)}</span>
-          <small>Offered in sems ${item.semesters.join(", ")}</small>
+          <small>Offered in ${escapeHtml(formatOfferedSemesters(item.semesters))}</small>
         </button>
       `,
     )
@@ -560,8 +576,8 @@ function renderModulePreview(message) {
       <article class="preview-card">
         <p>Availability</p>
         <strong>${escapeHtml(evaluation.availability.message)}</strong>
-        <span>Offered semesters: ${escapeHtml(
-          draftModule.offeredSemesters.join(", ") || "Unknown",
+        <span>Offered terms: ${escapeHtml(
+          formatOfferedSemesters(draftModule.offeredSemesters) || "Unknown",
         )}</span>
       </article>
       <article class="preview-card">
@@ -668,6 +684,7 @@ function handleResetPlan() {
   state.selectedModuleDetails = null;
   moduleSearchInput.value = "";
   academicYearInput.value = state.plan.academicYear;
+  suBudgetInput.value = state.plan.suBudgetMc ?? 32;
   savePlan();
   render();
 }
@@ -675,6 +692,7 @@ function handleResetPlan() {
 function savePlan() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state.plan));
   state.analytics = calculatePlan(state.plan);
+  suBudgetInput.value = state.plan.suBudgetMc ?? 32;
   saveStatus.textContent = `Saved at ${new Date().toLocaleTimeString()}`;
 }
 
@@ -689,6 +707,8 @@ function loadPlan() {
     return {
       ...fresh,
       ...parsed,
+      suBudgetMc:
+        typeof parsed.suBudgetMc === "number" ? parsed.suBudgetMc : fresh.suBudgetMc,
       requirements: Array.isArray(parsed.requirements)
         ? parsed.requirements
         : fresh.requirements,

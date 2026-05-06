@@ -38,16 +38,43 @@
             </div>
             <p id="save-status" class="subtle-text">Plan saved locally in your browser.</p>
           </div>
+          <div class="dashboard-toolbar">
+            <label class="field small-field">
+              <span>S/U budget (MC)</span>
+              <input id="su-budget" type="number" min="0" step="1" />
+            </label>
+          </div>
           <div id="summary-cards" class="summary-cards"></div>
-          <div id="year-breakdown" class="year-breakdown"></div>
+          <div class="panel-subsection">
+            <div class="panel-subheader">
+              <div>
+                <p class="section-kicker">Mid-level view</p>
+                <h3>Year-by-year breakdown</h3>
+              </div>
+            </div>
+            <div id="year-breakdown" class="year-breakdown"></div>
+          </div>
+        </section>
+
+        <section class="panel semesters-panel">
+          <div class="panel-header">
+            <div>
+              <p class="section-kicker">8-semester plan</p>
+              <h2>Semester roadmap</h2>
+            </div>
+          </div>
+          <div id="semester-grid" class="semester-grid"></div>
         </section>
 
         <section class="panel search-panel">
           <div class="panel-header">
             <div>
               <p class="section-kicker">Module finder</p>
-              <h2>Search NUSMods and add modules</h2>
+              <h2>Add modules into your plan</h2>
             </div>
+            <p class="subtle-text">
+              Search first, inspect prerequisites and offering terms, then add to a target semester.
+            </p>
           </div>
 
           <div class="search-controls">
@@ -92,15 +119,6 @@
           <div id="requirements-editor" class="requirements-editor"></div>
         </section>
 
-        <section class="panel semesters-panel">
-          <div class="panel-header">
-            <div>
-              <p class="section-kicker">8-semester plan</p>
-              <h2>Semester roadmap</h2>
-            </div>
-          </div>
-          <div id="semester-grid" class="semester-grid"></div>
-        </section>
       </main>
     </div>
 
