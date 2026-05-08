@@ -42,6 +42,7 @@ const academicYearInput = document.querySelector("#academic-year");
 const refreshCatalogButton = document.querySelector("#refresh-catalog");
 const resetPlanButton = document.querySelector("#reset-plan");
 const summaryCards = document.querySelector("#summary-cards");
+const scheduleSummaryCards = document.querySelector("#schedule-summary-cards");
 const yearBreakdown = document.querySelector("#year-breakdown");
 const semesterGrid = document.querySelector("#semester-grid");
 const requirementsEditor = document.querySelector("#requirements-editor");
@@ -56,6 +57,7 @@ const suBudgetInput = document.querySelector("#su-budget");
 const extraTermQuickAdd = document.querySelector("#extra-term-quick-add");
 const viewTabs = document.querySelectorAll("[data-view-tab]");
 const viewPanels = document.querySelectorAll("[data-view-panel]");
+const showDetailedStatsButton = document.querySelector("#show-detailed-stats");
 
 let searchDebounce = null;
 
@@ -116,6 +118,10 @@ function bindEvents() {
     tab.addEventListener("click", () => {
       setActiveView(tab.dataset.viewTab);
     });
+  });
+
+  showDetailedStatsButton?.addEventListener("click", () => {
+    setActiveView("schedule");
   });
 }
 
@@ -231,7 +237,7 @@ function renderTargetSemesterOptions() {
 
 function renderSummary() {
   const analytics = state.analytics;
-  const cards = [
+  const dashboardCards = [
     {
       label: "Current CAP",
       value: formatCap(analytics.overallPostSuCap),
@@ -247,14 +253,44 @@ function renderSummary() {
       value: `${analytics.suRemainingMc} MC`,
       note: `${analytics.suUsedMc} MC used`,
     },
+  ];
+
+  const detailedCards = [
     {
-      label: "Graded MCs",
-      value: `${analytics.gradedMc} MC`,
-      note: `Pre-S/U CAP ${formatCap(analytics.overallPreSuCap)}`,
+      label: "Pre-S/U CAP",
+      value: formatCap(analytics.overallPreSuCap),
+      note: `${analytics.gradedMc} graded MC`,
+    },
+    {
+      label: "S/U budget",
+      value: `${analytics.suBudgetMc} MC`,
+      note: `${analytics.suRemainingMc} MC left`,
+    },
+    {
+      label: "S/U used",
+      value: `${analytics.suUsedMc} MC`,
+      note: `${analytics.postSuMc} MC counted`,
+    },
+    {
+      label: "Honours track",
+      value: analytics.honoursClassification,
+      note: `Post-S/U CAP ${formatCap(analytics.overallPostSuCap)}`,
     },
   ];
 
-  summaryCards.innerHTML = cards
+  summaryCards.innerHTML = dashboardCards
+    .map(
+      (card) => `
+        <article class="summary-card">
+          <p>${card.label}</p>
+          <h3>${card.value}</h3>
+          <span>${card.note}</span>
+        </article>
+      `,
+    )
+    .join("");
+
+  scheduleSummaryCards.innerHTML = detailedCards
     .map(
       (card) => `
         <article class="summary-card">

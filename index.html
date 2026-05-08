@@ -43,43 +43,14 @@
             </div>
             <p id="save-status" class="subtle-text">Plan saved locally in your browser.</p>
           </div>
-          <div class="dashboard-toolbar">
-            <label class="field small-field">
-              <span>S/U budget (MC)</span>
-              <input id="su-budget" type="number" min="0" step="1" />
-            </label>
-          </div>
           <div id="summary-cards" class="summary-cards"></div>
-          <div class="dashboard-detail-grid">
-            <div class="panel-subsection dashboard-section-card">
-              <div class="panel-subheader">
-                <div>
-                  <p class="section-kicker">Mid-level view</p>
-                  <h3>Year-by-year breakdown</h3>
-                </div>
-              </div>
-              <div id="year-breakdown" class="year-breakdown"></div>
-            </div>
-            <div class="panel-subsection dashboard-section-card">
-              <div class="panel-subheader">
-                <div>
-                  <p class="section-kicker">Quick settings</p>
-                  <h3>Plan controls</h3>
-                </div>
-              </div>
-              <div class="dashboard-settings-list">
-                <label class="field compact-field">
-                  <span>Academic year</span>
-                  <select id="academic-year"></select>
-                </label>
-                <div class="search-button-row dashboard-button-row">
-                  <button id="refresh-catalog" class="btn btn-primary" type="button">
-                    Refresh NUSMods catalog
-                  </button>
-                  <button id="reset-plan" class="btn btn-ghost" type="button">Reset plan</button>
-                </div>
-              </div>
-            </div>
+          <div class="dashboard-cta">
+            <p class="subtle-text">
+              Need the semester-by-semester CAP view, S/U usage, and the full roadmap?
+            </p>
+            <button id="show-detailed-stats" class="btn btn-secondary" type="button">
+              Show detailed stats
+            </button>
           </div>
         </section>
 
@@ -92,6 +63,19 @@
             <p class="subtle-text">
               Choose an academic year, search modules, inspect prerequisites and offering terms, then add to a target semester.
             </p>
+          </div>
+
+          <div class="search-controls top-loader-controls">
+            <label class="field compact-field">
+              <span>Academic year</span>
+              <select id="academic-year"></select>
+            </label>
+            <div class="search-button-row">
+              <button id="refresh-catalog" class="btn btn-primary" type="button">
+                Refresh NUSMods catalog
+              </button>
+              <button id="reset-plan" class="btn btn-ghost" type="button">Reset plan</button>
+            </div>
           </div>
 
           <div class="field-row module-adder-row">
@@ -129,6 +113,20 @@
               <p class="section-kicker">8-semester plan</p>
               <h2>Semester roadmap</h2>
             </div>
+          </div>
+          <div class="schedule-insights">
+            <div class="schedule-insights-header">
+              <div>
+                <p class="section-kicker">Detailed stats</p>
+                <h3>Semester-wide tracker</h3>
+              </div>
+              <label class="field small-field">
+                <span>S/U budget (MC)</span>
+                <input id="su-budget" type="number" min="0" step="1" />
+              </label>
+            </div>
+            <div id="schedule-summary-cards" class="schedule-summary-cards"></div>
+            <div id="year-breakdown" class="year-breakdown"></div>
           </div>
           <div class="optional-terms-panel">
             <div class="optional-terms-copy">
