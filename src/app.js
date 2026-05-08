@@ -335,31 +335,49 @@ function renderSummary() {
 }
 
 function renderExtraTermQuickAdd() {
-  extraTermQuickAdd.innerHTML = EXTRA_TERM_LOCATIONS.map((location) => {
-    const existingExtras = state.plan.semesters.filter(
+  const totalExtras = state.plan.semesters.filter((semester) => !semester.isCore).length;
+  const locationOptions = EXTRA_TERM_LOCATIONS.map(
+    (location) => `<option value="${location.id}">${escapeHtml(location.label)}</option>`,
+  ).join("");
+  const termTypeOptions = EXTRA_TERM_TYPES.map(
+    (termType) => `<option value="${termType.id}">${escapeHtml(termType.label)}</option>`,
+  ).join("");
+  const existingLabels = EXTRA_TERM_LOCATIONS.map((location) => {
+    const count = state.plan.semesters.filter(
       (semester) => !semester.isCore && semester.year === location.year,
-    );
-    return `
-      <article class="quick-add-card">
-        <div>
-          <strong>${escapeHtml(location.label)}</strong>
-          <span>${existingExtras.length} optional term${existingExtras.length === 1 ? "" : "s"} added</span>
-        </div>
-        <div class="quick-add-actions">
-          ${EXTRA_TERM_TYPES.map(
-            (termType) =>
-              `<button class="chip-button" type="button" data-quick-term="${location.id}|${termType.id}">+ ${escapeHtml(termType.label)}</button>`,
-          ).join("")}
-        </div>
-      </article>
-    `;
-  }).join("");
+    ).length;
+    if (!count) {
+      return "";
+    }
+    return `<span class="optional-term-chip">${escapeHtml(location.label)}: ${count}</span>`;
+  })
+    .filter(Boolean)
+    .join("");
 
-  extraTermQuickAdd.querySelectorAll("[data-quick-term]").forEach((button) => {
-    button.addEventListener("click", (event) => {
-      const [locationId, termTypeId] = event.currentTarget.dataset.quickTerm.split("|");
-      addExtraTerm(locationId, termTypeId);
-    });
+  extraTermQuickAdd.innerHTML = `
+    <div class="quick-add-compact">
+      <label class="field compact-field">
+        <span>When</span>
+        <select id="extra-term-location">${locationOptions}</select>
+      </label>
+      <label class="field compact-field">
+        <span>Type</span>
+        <select id="extra-term-type">${termTypeOptions}</select>
+      </label>
+      <button class="btn btn-secondary quick-add-submit" id="add-extra-term" type="button">
+        Add optional term
+      </button>
+    </div>
+    <div class="quick-add-summary">
+      <span>${totalExtras} optional term${totalExtras === 1 ? "" : "s"} added</span>
+      <div class="optional-term-chip-row">${existingLabels || '<span class="optional-term-chip optional-term-chip-muted">No optional terms yet</span>'}</div>
+    </div>
+  `;
+
+  extraTermQuickAdd.querySelector("#add-extra-term")?.addEventListener("click", () => {
+    const locationId = extraTermQuickAdd.querySelector("#extra-term-location")?.value;
+    const termTypeId = extraTermQuickAdd.querySelector("#extra-term-type")?.value;
+    addExtraTerm(locationId, termTypeId);
   });
 }
 

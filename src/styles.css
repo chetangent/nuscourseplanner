@@ -764,7 +764,8 @@ select {
 
   .search-controls,
   .field-row,
-  .requirement-row {
+  .requirement-row,
+  .quick-add-compact {
     grid-template-columns: 1fr;
   }
 }
@@ -790,44 +791,44 @@ select {
   gap: 10px;
 }
 
-.quick-add-card {
-  display: flex;
-  justify-content: space-between;
-  gap: 14px;
-  align-items: center;
-  padding: 14px 16px;
-  border-radius: 16px;
-  background: rgba(255, 253, 248, 0.86);
-  border: 1px solid rgba(19, 78, 74, 0.1);
-  box-shadow: 0 10px 24px rgba(20, 35, 31, 0.05);
+.quick-add-compact {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
 }
 
-.quick-add-card span {
-  display: block;
-  margin-top: 4px;
+.quick-add-submit {
+  min-height: 48px;
+}
+
+.quick-add-summary {
+  display: grid;
+  gap: 10px;
   color: var(--muted);
   font-size: 0.92rem;
 }
 
-.quick-add-actions {
+.optional-term-chip-row {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  justify-content: flex-end;
 }
 
-.chip-button {
-  border: 1px solid rgba(19, 78, 74, 0.18);
-  background: white;
-  color: var(--brand);
+.optional-term-chip {
+  display: inline-flex;
+  align-items: center;
   border-radius: 999px;
-  padding: 9px 12px;
-  cursor: pointer;
-  font: inherit;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(19, 78, 74, 0.12);
+  color: var(--brand);
+  font-size: 0.88rem;
+  font-weight: 600;
 }
 
-.chip-button:hover {
-  background: rgba(19, 78, 74, 0.08);
+.optional-term-chip-muted {
+  color: var(--muted);
 }
 
 .optional-semester-card {
