@@ -47,6 +47,10 @@ select {
   padding: 28px 20px 48px;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 .hero {
   display: flex;
   justify-content: space-between;
@@ -96,6 +100,45 @@ select {
   font-size: 1rem;
 }
 
+.view-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 10px;
+  border-radius: 20px;
+  background: rgba(255, 252, 246, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.76);
+  box-shadow: var(--shadow);
+  position: sticky;
+  top: 16px;
+  z-index: 5;
+  backdrop-filter: blur(14px);
+}
+
+.view-tab {
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  padding: 11px 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+}
+
+.view-tab:hover {
+  transform: translateY(-1px);
+  background: rgba(19, 78, 74, 0.08);
+  color: var(--brand);
+}
+
+.view-tab.is-active {
+  background: var(--brand);
+  color: white;
+  box-shadow: 0 10px 24px rgba(19, 78, 74, 0.2);
+}
+
 .app-grid {
   display: grid;
   grid-template-columns: 1.05fr 0.95fr;
@@ -116,10 +159,36 @@ select {
   grid-column: 1 / -1;
 }
 
+.dashboard-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(320px, 0.7fr);
+  gap: 18px;
+}
+
 .dashboard-toolbar {
   display: flex;
   justify-content: flex-end;
   margin-bottom: 18px;
+}
+
+.dashboard-section-card {
+  margin-top: 0;
+  padding: 18px;
+  border-top: 0;
+  border-radius: var(--radius-lg);
+  background: var(--paper-strong);
+  border: 1px solid var(--line);
+}
+
+.dashboard-settings-list {
+  display: grid;
+  gap: 16px;
+}
+
+.dashboard-button-row {
+  align-items: stretch;
+  justify-content: flex-start;
+  flex-wrap: wrap;
 }
 
 .panel-subsection {
@@ -391,6 +460,17 @@ select {
 .preview-card strong {
   display: block;
   margin: 6px 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.preview-card span,
+.preview-description,
+.search-result span,
+.search-result small,
+.module-title-cell span {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .preview-description {
@@ -518,6 +598,10 @@ select {
   flex-wrap: wrap;
 }
 
+.semester-cap span {
+  overflow-wrap: anywhere;
+}
+
 .semester-table-wrap {
   overflow: auto;
   margin-bottom: 12px;
@@ -574,6 +658,7 @@ select {
 @media (max-width: 1100px) {
   .app-grid,
   .summary-cards,
+  .dashboard-detail-grid,
   .year-breakdown,
   .preview-grid,
   .year-section-grid {
@@ -595,6 +680,11 @@ select {
 @media (max-width: 720px) {
   .page-shell {
     padding: 14px 12px 24px;
+  }
+
+  .view-nav {
+    position: static;
+    padding: 8px;
   }
 
   .hero,

@@ -23,6 +23,8 @@ import {
   searchCatalog,
 } from "./nusmods.js";
 
+const ACTIVE_VIEW_STORAGE_KEY = "nus-course-planner-active-view";
+
 const state = {
   plan: loadPlan(),
   analytics: null,
@@ -33,6 +35,7 @@ const state = {
   targetSemesterId: "",
   selectedModuleCatalogEntry: null,
   selectedModuleDetails: null,
+  activeView: "dashboard",
 };
 
 const academicYearInput = document.querySelector("#academic-year");
@@ -51,6 +54,8 @@ const saveStatus = document.querySelector("#save-status");
 const semesterTemplate = document.querySelector("#semester-card-template");
 const suBudgetInput = document.querySelector("#su-budget");
 const extraTermQuickAdd = document.querySelector("#extra-term-quick-add");
+const viewTabs = document.querySelectorAll("[data-view-tab]");
+const viewPanels = document.querySelectorAll("[data-view-panel]");
 
 let searchDebounce = null;
 
@@ -58,6 +63,7 @@ boot();
 
 function boot() {
   state.plan.academicYear = normalizeAcademicYear(state.plan.academicYear);
+  state.activeView = loadActiveView();
   state.analytics = calculatePlan(state.plan);
   renderAcademicYearOptions();
   suBudgetInput.value = state.plan.suBudgetMc ?? 32;
@@ -104,6 +110,12 @@ function bindEvents() {
   targetSemesterSelect.addEventListener("change", () => {
     state.targetSemesterId = targetSemesterSelect.value;
     renderModulePreview();
+  });
+
+  viewTabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      setActiveView(tab.dataset.viewTab);
+    });
   });
 }
 
@@ -157,6 +169,7 @@ async function selectCatalogEntry(moduleCode) {
 function render() {
   state.analytics = calculatePlan(state.plan);
   renderAcademicYearOptions();
+  renderActiveView();
   renderTargetSemesterOptions();
   renderSummary();
   renderExtraTermQuickAdd();
@@ -164,6 +177,28 @@ function render() {
   renderSemesters();
   renderSearchResults();
   renderModulePreview();
+}
+
+function renderActiveView() {
+  viewTabs.forEach((tab) => {
+    const isActive = tab.dataset.viewTab === state.activeView;
+    tab.classList.toggle("is-active", isActive);
+    tab.setAttribute("aria-pressed", String(isActive));
+  });
+
+  viewPanels.forEach((panel) => {
+    const isActive = panel.dataset.viewPanel === state.activeView;
+    panel.hidden = !isActive;
+  });
+}
+
+function setActiveView(viewName) {
+  if (!["dashboard", "courses", "schedule", "requirements"].includes(viewName)) {
+    return;
+  }
+  state.activeView = viewName;
+  localStorage.setItem(ACTIVE_VIEW_STORAGE_KEY, viewName);
+  renderActiveView();
 }
 
 function renderAcademicYearOptions() {
@@ -884,6 +919,13 @@ function loadPlan() {
   } catch {
     return createEmptyPlan();
   }
+}
+
+function loadActiveView() {
+  const stored = localStorage.getItem(ACTIVE_VIEW_STORAGE_KEY);
+  return ["dashboard", "courses", "schedule", "requirements"].includes(stored)
+    ? stored
+    : "dashboard";
 }
 
 function setCatalogBanner(message, tone) {

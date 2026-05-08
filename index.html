@@ -19,8 +19,71 @@
         </div>
       </header>
 
+      <nav class="view-nav" aria-label="Planner sections">
+        <button class="view-tab is-active" type="button" data-view-tab="dashboard">
+          Dashboard
+        </button>
+        <button class="view-tab" type="button" data-view-tab="courses">
+          Add courses
+        </button>
+        <button class="view-tab" type="button" data-view-tab="schedule">
+          Semester plan
+        </button>
+        <button class="view-tab" type="button" data-view-tab="requirements">
+          Requirements
+        </button>
+      </nav>
+
       <main class="app-grid">
-        <section class="panel search-panel top-search-panel">
+        <section class="panel summary-panel" data-view-panel="dashboard">
+          <div class="panel-header">
+            <div>
+              <p class="section-kicker">At a glance</p>
+              <h2>CAP + graduation progress</h2>
+            </div>
+            <p id="save-status" class="subtle-text">Plan saved locally in your browser.</p>
+          </div>
+          <div class="dashboard-toolbar">
+            <label class="field small-field">
+              <span>S/U budget (MC)</span>
+              <input id="su-budget" type="number" min="0" step="1" />
+            </label>
+          </div>
+          <div id="summary-cards" class="summary-cards"></div>
+          <div class="dashboard-detail-grid">
+            <div class="panel-subsection dashboard-section-card">
+              <div class="panel-subheader">
+                <div>
+                  <p class="section-kicker">Mid-level view</p>
+                  <h3>Year-by-year breakdown</h3>
+                </div>
+              </div>
+              <div id="year-breakdown" class="year-breakdown"></div>
+            </div>
+            <div class="panel-subsection dashboard-section-card">
+              <div class="panel-subheader">
+                <div>
+                  <p class="section-kicker">Quick settings</p>
+                  <h3>Plan controls</h3>
+                </div>
+              </div>
+              <div class="dashboard-settings-list">
+                <label class="field compact-field">
+                  <span>Academic year</span>
+                  <select id="academic-year"></select>
+                </label>
+                <div class="search-button-row dashboard-button-row">
+                  <button id="refresh-catalog" class="btn btn-primary" type="button">
+                    Refresh NUSMods catalog
+                  </button>
+                  <button id="reset-plan" class="btn btn-ghost" type="button">Reset plan</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel search-panel top-search-panel" data-view-panel="courses">
           <div class="panel-header">
             <div>
               <p class="section-kicker">Module finder</p>
@@ -29,19 +92,6 @@
             <p class="subtle-text">
               Choose an academic year, search modules, inspect prerequisites and offering terms, then add to a target semester.
             </p>
-          </div>
-
-          <div class="search-controls top-loader-controls">
-            <label class="field compact-field">
-              <span>Academic year</span>
-              <select id="academic-year"></select>
-            </label>
-            <div class="search-button-row">
-              <button id="refresh-catalog" class="btn btn-primary" type="button">
-                Refresh NUSMods catalog
-              </button>
-              <button id="reset-plan" class="btn btn-ghost" type="button">Reset plan</button>
-            </div>
           </div>
 
           <div class="field-row module-adder-row">
@@ -73,33 +123,7 @@
           </div>
         </section>
 
-        <section class="panel summary-panel">
-          <div class="panel-header">
-            <div>
-              <p class="section-kicker">At a glance</p>
-              <h2>CAP + graduation progress</h2>
-            </div>
-            <p id="save-status" class="subtle-text">Plan saved locally in your browser.</p>
-          </div>
-          <div class="dashboard-toolbar">
-            <label class="field small-field">
-              <span>S/U budget (MC)</span>
-              <input id="su-budget" type="number" min="0" step="1" />
-            </label>
-          </div>
-          <div id="summary-cards" class="summary-cards"></div>
-          <div class="panel-subsection">
-            <div class="panel-subheader">
-              <div>
-                <p class="section-kicker">Mid-level view</p>
-                <h3>Year-by-year breakdown</h3>
-              </div>
-            </div>
-            <div id="year-breakdown" class="year-breakdown"></div>
-          </div>
-        </section>
-
-        <section class="panel semesters-panel">
+        <section class="panel semesters-panel" data-view-panel="schedule">
           <div class="panel-header">
             <div>
               <p class="section-kicker">8-semester plan</p>
@@ -119,7 +143,7 @@
           <div id="semester-grid" class="semester-grid"></div>
         </section>
 
-        <section class="panel requirements-panel">
+        <section class="panel requirements-panel" data-view-panel="requirements">
           <div class="panel-header">
             <div>
               <p class="section-kicker">Degree audit</p>
