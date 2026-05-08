@@ -36,6 +36,7 @@ const state = {
   selectedModuleCatalogEntry: null,
   selectedModuleDetails: null,
   activeView: "dashboard",
+  dashboardDetailsVisible: false,
 };
 
 const academicYearInput = document.querySelector("#academic-year");
@@ -58,6 +59,7 @@ const extraTermQuickAdd = document.querySelector("#extra-term-quick-add");
 const viewTabs = document.querySelectorAll("[data-view-tab]");
 const viewPanels = document.querySelectorAll("[data-view-panel]");
 const showDetailedStatsButton = document.querySelector("#show-detailed-stats");
+const dashboardDetailedStats = document.querySelector("#dashboard-detailed-stats");
 
 let searchDebounce = null;
 
@@ -121,7 +123,8 @@ function bindEvents() {
   });
 
   showDetailedStatsButton?.addEventListener("click", () => {
-    setActiveView("schedule");
+    state.dashboardDetailsVisible = !state.dashboardDetailsVisible;
+    renderDashboardDetails();
   });
 }
 
@@ -176,6 +179,7 @@ function render() {
   state.analytics = calculatePlan(state.plan);
   renderAcademicYearOptions();
   renderActiveView();
+  renderDashboardDetails();
   renderTargetSemesterOptions();
   renderSummary();
   renderExtraTermQuickAdd();
@@ -183,6 +187,18 @@ function render() {
   renderSemesters();
   renderSearchResults();
   renderModulePreview();
+}
+
+function renderDashboardDetails() {
+  if (!dashboardDetailedStats || !showDetailedStatsButton) {
+    return;
+  }
+
+  dashboardDetailedStats.hidden = !state.dashboardDetailsVisible;
+  showDetailedStatsButton.textContent = state.dashboardDetailsVisible
+    ? "Hide detailed stats"
+    : "Show detailed stats";
+  showDetailedStatsButton.setAttribute("aria-expanded", String(state.dashboardDetailsVisible));
 }
 
 function renderActiveView() {

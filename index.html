@@ -52,6 +52,22 @@
               Show detailed stats
             </button>
           </div>
+          <section id="dashboard-detailed-stats" class="dashboard-detailed-stats" hidden>
+            <div class="schedule-insights">
+              <div class="schedule-insights-header">
+                <div>
+                  <p class="section-kicker">Detailed stats</p>
+                  <h3>Semester-wide tracker</h3>
+                </div>
+                <label class="field small-field">
+                  <span>S/U budget (MC)</span>
+                  <input id="su-budget" type="number" min="0" step="1" />
+                </label>
+              </div>
+              <div id="schedule-summary-cards" class="schedule-summary-cards"></div>
+              <div id="year-breakdown" class="year-breakdown"></div>
+            </div>
+          </section>
         </section>
 
         <section class="panel search-panel top-search-panel" data-view-panel="courses">
@@ -113,20 +129,6 @@
               <p class="section-kicker">8-semester plan</p>
               <h2>Semester roadmap</h2>
             </div>
-          </div>
-          <div class="schedule-insights">
-            <div class="schedule-insights-header">
-              <div>
-                <p class="section-kicker">Detailed stats</p>
-                <h3>Semester-wide tracker</h3>
-              </div>
-              <label class="field small-field">
-                <span>S/U budget (MC)</span>
-                <input id="su-budget" type="number" min="0" step="1" />
-              </label>
-            </div>
-            <div id="schedule-summary-cards" class="schedule-summary-cards"></div>
-            <div id="year-breakdown" class="year-breakdown"></div>
           </div>
           <div class="optional-terms-panel">
             <div class="optional-terms-copy">

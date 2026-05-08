@@ -168,6 +168,10 @@ select {
   border-top: 1px solid var(--line);
 }
 
+.dashboard-detailed-stats {
+  margin-top: 18px;
+}
+
 .panel-subsection {
   margin-top: 24px;
   padding-top: 20px;
