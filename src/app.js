@@ -60,8 +60,10 @@ const viewTabs = document.querySelectorAll("[data-view-tab]");
 const viewPanels = document.querySelectorAll("[data-view-panel]");
 const showDetailedStatsButton = document.querySelector("#show-detailed-stats");
 const dashboardDetailedStats = document.querySelector("#dashboard-detailed-stats");
+const toastRegion = document.querySelector("#toast-region");
 
 let searchDebounce = null;
+let toastTimeout = null;
 
 boot();
 
@@ -600,7 +602,17 @@ function wireSemesterRows(card, semesterIndex) {
   card.querySelectorAll("[data-module-code]").forEach((input) => {
     input.addEventListener("change", (event) => {
       updateModule(semesterIndex, event.currentTarget.dataset.moduleCode, (module) => {
-        module.moduleCode = event.currentTarget.value.toUpperCase().trim();
+        const nextCode = normalizeModuleCode(event.currentTarget.value);
+        if (nextCode && isModuleCodeAlreadyPlanned(nextCode, module.id)) {
+          showToast(
+            `${nextCode} is already in your plan. Each module can only be added once.`,
+            "warning",
+          );
+          event.currentTarget.value = module.moduleCode || "";
+          return false;
+        }
+        module.moduleCode = nextCode;
+        return true;
       });
     });
   });
@@ -807,11 +819,24 @@ function addSelectedModule(requirementId) {
     state.selectedModuleCatalogEntry,
     requirementId,
   );
+  const normalizedCode = normalizeModuleCode(newModule.moduleCode);
+  if (normalizedCode && isModuleCodeAlreadyPlanned(normalizedCode)) {
+    showToast(
+      `${normalizedCode} is already in your plan. Each module can only be added once.`,
+      "warning",
+    );
+    saveStatus.textContent = `${normalizedCode} was not added because it already exists in the plan.`;
+    return;
+  }
   newModule.targetTermNumber = targetSemester.termNumber ?? null;
   targetSemester.modules.push(newModule);
   savePlan();
   render();
   saveStatus.textContent = `${newModule.moduleCode} added to ${targetSemester.year} ${targetSemester.semester}.`;
+  showToast(
+    `${newModule.moduleCode} added to ${targetSemester.year} ${targetSemester.semester}.`,
+    "success",
+  );
 }
 
 function addManualModule(semesterId) {
@@ -847,9 +872,31 @@ function updateModule(semesterIndex, moduleId, updater) {
   if (!module) {
     return;
   }
-  updater(module);
+  const shouldContinue = updater(module);
+  if (shouldContinue === false) {
+    return;
+  }
   savePlan();
   render();
+}
+
+function normalizeModuleCode(value) {
+  return String(value ?? "").toUpperCase().trim();
+}
+
+function isModuleCodeAlreadyPlanned(moduleCode, excludeModuleId = null) {
+  const normalizedCode = normalizeModuleCode(moduleCode);
+  if (!normalizedCode) {
+    return false;
+  }
+
+  return state.plan.semesters.some((semester) =>
+    semester.modules.some(
+      (module) =>
+        module.id !== excludeModuleId &&
+        normalizeModuleCode(module.moduleCode) === normalizedCode,
+    ),
+  );
 }
 
 function removeModule(semesterIndex, moduleId) {
@@ -926,6 +973,20 @@ function savePlan() {
   state.analytics = calculatePlan(state.plan);
   suBudgetInput.value = state.plan.suBudgetMc ?? 32;
   saveStatus.textContent = `Saved at ${new Date().toLocaleTimeString()}`;
+}
+
+function showToast(message, tone = "success") {
+  if (!toastRegion) {
+    return;
+  }
+
+  toastRegion.innerHTML = `<div class="toast toast-${tone}">${escapeHtml(message)}</div>`;
+  if (toastTimeout) {
+    window.clearTimeout(toastTimeout);
+  }
+  toastTimeout = window.setTimeout(() => {
+    toastRegion.innerHTML = "";
+  }, 2400);
 }
 
 function loadPlan() {
