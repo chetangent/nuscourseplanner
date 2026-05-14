@@ -754,6 +754,7 @@ select {
 .semester-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 .semester-table th,
@@ -772,10 +773,40 @@ select {
   background: rgba(245, 248, 246, 0.9);
 }
 
+.semester-table th:nth-child(1),
+.semester-table td:nth-child(1) {
+  width: 32%;
+}
+
+.semester-table th:nth-child(2),
+.semester-table td:nth-child(2) {
+  width: 10%;
+}
+
+.semester-table th:nth-child(3),
+.semester-table td:nth-child(3) {
+  width: 20%;
+}
+
+.semester-table th:nth-child(4),
+.semester-table td:nth-child(4) {
+  width: 13%;
+}
+
+.semester-table th:nth-child(5),
+.semester-table td:nth-child(5) {
+  width: 15%;
+}
+
+.semester-table th:nth-child(6),
+.semester-table td:nth-child(6) {
+  width: 10%;
+}
+
 .module-title-cell {
   display: grid;
   gap: 4px;
-  min-width: 220px;
+  min-width: 0;
 }
 
 .badge-row {
@@ -783,26 +814,43 @@ select {
 }
 
 .semester-table .table-input,
-.semester-table .su-toggle {
+.semester-table .su-toggle,
+.semester-table .icon-button {
   font-size: 0.92rem;
 }
 
+.semester-table .table-input {
+  padding: 10px 11px;
+}
+
+.semester-table select.table-input {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .short-input {
-  min-width: 72px;
+  min-width: 0;
 }
 
 .icon-button {
   background: rgba(159, 42, 42, 0.1);
   color: var(--danger);
-  padding: 10px 12px;
+  padding: 10px 10px;
 }
 
 .su-toggle {
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .su-toggle input {
   margin: 0;
+}
+
+.su-toggle span {
+  font-size: 0.84rem;
+  line-height: 1.35;
 }
 
 @media (max-width: 1100px) {
