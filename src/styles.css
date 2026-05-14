@@ -438,6 +438,23 @@ select {
   gap: 4px;
 }
 
+.search-result.is-selected {
+  border-color: rgba(19, 78, 74, 0.38);
+  background: linear-gradient(180deg, rgba(212, 242, 230, 0.9), rgba(255, 253, 248, 0.96));
+  box-shadow: 0 12px 28px rgba(19, 78, 74, 0.08);
+}
+
+.search-result.is-planned {
+  border-color: rgba(143, 79, 31, 0.2);
+}
+
+.search-result-state {
+  font-style: normal;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--warning);
+}
+
 .module-preview {
   margin-top: 16px;
   border-radius: 20px;

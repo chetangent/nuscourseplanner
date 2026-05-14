@@ -37,6 +37,7 @@ const state = {
   selectedModuleDetails: null,
   activeView: "dashboard",
   dashboardDetailsVisible: false,
+  previewFeedback: null,
 };
 
 const academicYearInput = document.querySelector("#academic-year");
@@ -94,6 +95,7 @@ function bindEvents() {
     state.catalogLoadedFor = null;
     state.selectedModuleCatalogEntry = null;
     state.selectedModuleDetails = null;
+    state.previewFeedback = null;
     savePlan();
     render();
     loadCatalog(false);
@@ -167,6 +169,7 @@ async function selectCatalogEntry(moduleCode) {
   }
   state.selectedModuleCatalogEntry = entry;
   state.selectedModuleDetails = null;
+  state.previewFeedback = null;
   renderModulePreview("Loading module details...");
 
   try {
@@ -692,13 +695,20 @@ function renderSearchResults() {
 
   searchResults.innerHTML = matches
     .map(
-      (item) => `
-        <button class="search-result" type="button" data-catalog-code="${item.moduleCode}">
+      (item) => {
+        const normalizedCode = normalizeModuleCode(item.moduleCode);
+        const isSelected =
+          normalizeModuleCode(state.selectedModuleCatalogEntry?.moduleCode) === normalizedCode;
+        const isAlreadyAdded = isModuleCodeAlreadyPlanned(normalizedCode);
+        return `
+        <button class="search-result ${isSelected ? "is-selected" : ""} ${isAlreadyAdded ? "is-planned" : ""}" type="button" data-catalog-code="${item.moduleCode}">
           <strong>${escapeHtml(item.moduleCode)}</strong>
           <span>${escapeHtml(item.title)}</span>
+          ${isAlreadyAdded ? '<em class="search-result-state">Already in your plan</em>' : ""}
           <small>Offered in ${escapeHtml(formatOfferedSemesters(item.semesters))}</small>
         </button>
-      `,
+      `;
+      },
     )
     .join("");
 
@@ -758,9 +768,16 @@ function renderModulePreview(message) {
       `,
     )
     .join("");
+  const normalizedCode = normalizeModuleCode(draftModule.moduleCode);
+  const isAlreadyAdded = isModuleCodeAlreadyPlanned(normalizedCode);
+  const previewFeedback =
+    state.previewFeedback && state.previewFeedback.code === normalizedCode
+      ? state.previewFeedback
+      : null;
 
   modulePreview.className = "module-preview";
   modulePreview.innerHTML = `
+    ${previewFeedback ? `<div class="banner banner-${previewFeedback.tone}">${escapeHtml(previewFeedback.message)}</div>` : ""}
     <div class="preview-header">
       <div>
         <p class="preview-code">${escapeHtml(state.selectedModuleDetails.moduleCode)}</p>
@@ -790,8 +807,8 @@ function renderModulePreview(message) {
         <span>Map to requirement</span>
         <select id="preview-requirement">${requirementOptions}</select>
       </label>
-      <button id="add-selected-module" class="btn btn-primary" type="button">
-        Add to ${escapeHtml(targetSemester?.year ?? "")} ${escapeHtml(targetSemester?.semester ?? "")}
+      <button id="add-selected-module" class="btn ${isAlreadyAdded ? "btn-ghost" : "btn-primary"}" type="button" ${isAlreadyAdded ? "disabled" : ""}>
+        ${isAlreadyAdded ? "Already added to plan" : `Add to ${escapeHtml(targetSemester?.year ?? "")} ${escapeHtml(targetSemester?.semester ?? "")}`}
       </button>
     </div>
     <div class="preview-description">
@@ -799,7 +816,7 @@ function renderModulePreview(message) {
     </div>
   `;
 
-  modulePreview.querySelector("#add-selected-module").addEventListener("click", () => {
+  modulePreview.querySelector("#add-selected-module")?.addEventListener("click", () => {
     const selectedRequirementId = modulePreview.querySelector("#preview-requirement").value;
     addSelectedModule(selectedRequirementId);
   });
@@ -821,15 +838,26 @@ function addSelectedModule(requirementId) {
   );
   const normalizedCode = normalizeModuleCode(newModule.moduleCode);
   if (normalizedCode && isModuleCodeAlreadyPlanned(normalizedCode)) {
+    state.previewFeedback = {
+      code: normalizedCode,
+      tone: "warning",
+      message: `${normalizedCode} is already in your plan. Each module can only be added once.`,
+    };
     showToast(
       `${normalizedCode} is already in your plan. Each module can only be added once.`,
       "warning",
     );
     saveStatus.textContent = `${normalizedCode} was not added because it already exists in the plan.`;
+    renderModulePreview();
     return;
   }
   newModule.targetTermNumber = targetSemester.termNumber ?? null;
   targetSemester.modules.push(newModule);
+  state.previewFeedback = {
+    code: normalizedCode,
+    tone: "success",
+    message: `${normalizedCode} added to ${targetSemester.year} ${targetSemester.semester}.`,
+  };
   savePlan();
   render();
   saveStatus.textContent = `${newModule.moduleCode} added to ${targetSemester.year} ${targetSemester.semester}.`;
