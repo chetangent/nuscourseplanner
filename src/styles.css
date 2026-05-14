@@ -395,6 +395,24 @@ select {
   margin-top: 18px;
 }
 
+.courses-layout {
+  display: grid;
+  grid-template-columns: minmax(340px, 0.95fr) minmax(0, 1.05fr);
+  gap: 18px;
+  align-items: start;
+  margin-top: 18px;
+}
+
+.courses-preview-column {
+  position: sticky;
+  top: 96px;
+}
+
+.courses-results-column {
+  display: grid;
+  align-content: start;
+}
+
 .banner {
   border-radius: 14px;
   padding: 12px 14px;
@@ -425,23 +443,36 @@ select {
 .search-results {
   display: grid;
   gap: 10px;
-  max-height: 300px;
+  max-height: 620px;
   overflow: auto;
+  padding-right: 2px;
 }
 
 .search-result {
+  position: relative;
   text-align: left;
   background: var(--paper-strong);
   border: 1px solid var(--line);
   border-radius: 16px;
   display: grid;
   gap: 4px;
+  padding: 14px 16px;
+  box-shadow: 0 8px 18px rgba(20, 35, 31, 0.04);
 }
 
 .search-result.is-selected {
   border-color: rgba(19, 78, 74, 0.38);
   background: linear-gradient(180deg, rgba(212, 242, 230, 0.9), rgba(255, 253, 248, 0.96));
   box-shadow: 0 12px 28px rgba(19, 78, 74, 0.08);
+}
+
+.search-result.is-selected::before {
+  content: "";
+  position: absolute;
+  inset: 10px auto 10px 8px;
+  width: 4px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--brand), #2d7a70);
 }
 
 .search-result.is-planned {
@@ -456,11 +487,11 @@ select {
 }
 
 .module-preview {
-  margin-top: 16px;
   border-radius: 20px;
   padding: 18px;
   background: linear-gradient(180deg, rgba(19, 78, 74, 0.06), rgba(255, 253, 248, 0.78));
   border: 1px solid var(--line);
+  box-shadow: 0 14px 30px rgba(20, 35, 31, 0.06);
 }
 
 .empty-state,
@@ -488,6 +519,11 @@ select {
 .requirement-card {
   padding: 14px;
   border-radius: var(--radius-md);
+}
+
+.preview-card {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(20, 35, 31, 0.08);
 }
 
 .preview-card strong {
@@ -722,7 +758,7 @@ select {
 
 .semester-table th,
 .semester-table td {
-  padding: 12px 8px;
+  padding: 11px 8px;
   border-top: 1px solid rgba(20, 35, 31, 0.07);
   text-align: left;
   vertical-align: top;
@@ -739,11 +775,16 @@ select {
 .module-title-cell {
   display: grid;
   gap: 4px;
-  min-width: 260px;
+  min-width: 220px;
 }
 
 .badge-row {
   flex-wrap: wrap;
+}
+
+.semester-table .table-input,
+.semester-table .su-toggle {
+  font-size: 0.92rem;
 }
 
 .short-input {
@@ -766,12 +807,17 @@ select {
 
 @media (max-width: 1100px) {
   .app-grid,
+  .courses-layout,
   .summary-cards,
   .schedule-summary-cards,
   .year-breakdown,
   .preview-grid,
   .year-section-grid {
     grid-template-columns: 1fr;
+  }
+
+  .courses-preview-column {
+    position: static;
   }
 
   .hero,
@@ -809,6 +855,14 @@ select {
   .requirement-row,
   .quick-add-compact {
     grid-template-columns: 1fr;
+  }
+
+  .courses-layout {
+    gap: 14px;
+  }
+
+  .courses-preview-column {
+    order: -1;
   }
 }
 
